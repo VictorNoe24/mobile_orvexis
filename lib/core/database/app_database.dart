@@ -27,6 +27,10 @@ import 'tables/payslip_lines_table.dart';
 import 'tables/employee_loans_table.dart';
 import 'tables/loan_installments_table.dart';
 
+import 'daos/organizations_dao.dart';
+import 'daos/users_dao.dart';
+import 'daos/org_users_dao.dart';
+
 part 'app_database.g.dart';
 
 @DriftDatabase(
@@ -53,6 +57,11 @@ part 'app_database.g.dart';
     PayslipLines,
     EmployeeLoans,
     LoanInstallments,
+  ],
+  daos: [
+    OrganizationsDao,
+    UsersDao,
+    OrgUsersDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
