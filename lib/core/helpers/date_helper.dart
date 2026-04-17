@@ -1,6 +1,10 @@
 import 'package:intl/intl.dart';
 
 class DateHelper {
+  static DateTime now() {
+    return DateTime.now();
+  }
+
   static String formatDate(DateTime? date, {String pattern = 'dd/MM/yyyy'}) {
     if (date == null) return '';
     return DateFormat(pattern).format(date);

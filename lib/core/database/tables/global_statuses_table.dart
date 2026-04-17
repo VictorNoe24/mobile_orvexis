@@ -1,16 +1,14 @@
 import 'package:drift/drift.dart';
 import '../../helpers/date_helper.dart';
 import '../../helpers/uuid_helper.dart';
-import 'organizations_table.dart';
 
-class Statuses extends Table {
-  TextColumn get idStatus =>
+class GlobalStatuses extends Table {
+  TextColumn get idGlobalStatus =>
       text().clientDefault(() => UuidHelper.generate())();
-  TextColumn get organizationId =>
-      text().references(Organizations, #idOrganization)();
   TextColumn get entity => text()();
   TextColumn get code => text()();
   TextColumn get name => text()();
+  TextColumn get category => text().nullable()();
   IntColumn get sortOrder => integer().nullable()();
   BoolColumn get isTerminal => boolean().withDefault(const Constant(false))();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
@@ -20,5 +18,5 @@ class Statuses extends Table {
       dateTime().clientDefault(() => DateHelper.now())();
 
   @override
-  Set<Column> get primaryKey => {idStatus};
+  Set<Column> get primaryKey => {idGlobalStatus};
 }

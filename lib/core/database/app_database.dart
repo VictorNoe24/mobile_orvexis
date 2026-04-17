@@ -4,12 +4,17 @@ import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import 'database_triggers.dart';
+import 'global_status_defaults.dart';
+import '../helpers/date_helper.dart';
+import '../helpers/uuid_helper.dart';
 import 'tables/organizations_table.dart';
 import 'tables/users_table.dart';
 import 'tables/org_users_table.dart';
 import 'tables/roles_table.dart';
 import 'tables/org_user_roles_table.dart';
 import 'tables/statuses_table.dart';
+import 'tables/global_statuses_table.dart';
 import 'tables/work_units_table.dart';
 import 'tables/teams_table.dart';
 import 'tables/work_unit_assignments_table.dart';
@@ -30,6 +35,7 @@ import 'tables/loan_installments_table.dart';
 import 'daos/organizations_dao.dart';
 import 'daos/users_dao.dart';
 import 'daos/org_users_dao.dart';
+import 'seeders/global_statuses_seeder.dart';
 
 part 'app_database.g.dart';
 
@@ -41,6 +47,7 @@ part 'app_database.g.dart';
     Roles,
     OrgUserRoles,
     Statuses,
+    GlobalStatuses,
     WorkUnits,
     Teams,
     WorkUnitAssignments,
@@ -69,6 +76,19 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   int get schemaVersion => 1;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) async {
+          await m.createAll();
+          await createUpdatedAtTriggers(this);
+          await GlobalStatusesSeeder(this).seed();
+        },
+        beforeOpen: (details) async {
+          await createUpdatedAtTriggers(this);
+          await GlobalStatusesSeeder(this).seed();
+        },
+      );
 }
 
 LazyDatabase _openConnection() {
