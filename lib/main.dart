@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'config/router/app_router.dart';
 import 'config/theme/app_theme.dart';
 import 'config/theme/theme_controller.dart';
+import 'core/database/app_database.dart';
 import 'core/helpers/app_error_handler.dart';
 
 Future<void> main() async {
@@ -20,7 +21,18 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final ThemeController themeController = ThemeController();
-  late final router = appRouter(themeController);
+  final AppDatabase database = AppDatabase();
+  late final router = appRouter(
+    themeController: themeController,
+    database: database,
+  );
+
+  @override
+  void dispose() {
+    database.close();
+    themeController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
