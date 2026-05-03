@@ -2,11 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_orvexis/core/database/app_database.dart';
 import 'package:mobile_orvexis/core/database/queries/global_statuses_queries.dart';
+import 'package:mobile_orvexis/feature/auth/domain/usecases/has_active_session_usecase.dart';
 
 class SplashScreen extends StatefulWidget {
   final AppDatabase database;
+  final HasActiveSessionUseCase hasActiveSessionUseCase;
 
-  const SplashScreen({super.key, required this.database});
+  const SplashScreen({
+    super.key,
+    required this.database,
+    required this.hasActiveSessionUseCase,
+  });
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -46,8 +52,10 @@ class _SplashScreenState extends State<SplashScreen> {
         );
       }
 
+      final hasActiveSession = await widget.hasActiveSessionUseCase();
+
       if (!mounted) return;
-      context.go('/home');
+      context.go(hasActiveSession ? '/home' : '/start');
     } catch (error) {
       if (!mounted) return;
       setState(() {

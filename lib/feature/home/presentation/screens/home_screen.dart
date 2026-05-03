@@ -1,30 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile_orvexis/config/theme/theme_controller.dart';
-import 'package:mobile_orvexis/core/database/app_database.dart';
-import 'package:mobile_orvexis/core/database/queries/global_statuses_queries.dart';
+import 'package:mobile_orvexis/feature/auth/domain/entities/auth_session.dart';
+import 'package:mobile_orvexis/feature/auth/domain/usecases/get_current_session_usecase.dart';
+import 'package:mobile_orvexis/feature/auth/domain/usecases/logout_usecase.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   final ThemeController themeController;
-  final AppDatabase database;
+  final GetCurrentSessionUseCase getCurrentSessionUseCase;
+  final LogoutUseCase logoutUseCase;
 
   const HomeScreen({
     super.key,
     required this.themeController,
-    required this.database,
+    required this.getCurrentSessionUseCase,
+    required this.logoutUseCase,
   });
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0;
+
+  Future<void> _handleLogout() async {
+    await widget.logoutUseCase();
+    if (!mounted) return;
+    context.go('/start');
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final globalStatusesQueries = GlobalStatusesQueries(database);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
-      body: StreamBuilder<List<GlobalStatuse>>(
-        stream: globalStatusesQueries.watchAllOrdered(),
+      appBar: AppBar(
+        title: Text(_titles[_selectedIndex]),
+        actions: _selectedIndex == 4
+            ? [
+                TextButton(
+                  onPressed: _handleLogout,
+                  child: const Text('Cerrar sesion'),
+                ),
+              ]
+            : null,
+      ),
+      body: FutureBuilder<AuthSession?>(
+        future: widget.getCurrentSessionUseCase(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -33,88 +59,158 @@ class HomeScreen extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  'Error al cargar global statuses: ${snapshot.error}',
+                  'Error al cargar la sesion: ${snapshot.error}',
                   textAlign: TextAlign.center,
                 ),
               ),
             );
           }
 
-          final statuses = snapshot.data ?? [];
-          final duplicateCodes = globalStatusesQueries.duplicateCodeCount(
-            statuses,
-          );
+          final session = snapshot.data;
 
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(Icons.dark_mode, color: colors.primary),
-                      const SizedBox(width: 12),
-                      const Expanded(child: Text('Modo oscuro')),
-                      Switch(
-                        value: themeController.themeMode == ThemeMode.dark,
-                        onChanged: themeController.toggleTheme,
-                      ),
-                    ],
-                  ),
+          if (session == null) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'No se encontro una sesion activa.',
+                  textAlign: TextAlign.center,
                 ),
               ),
-              const SizedBox(height: 16),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Validacion de seeders',
-                        style: theme.textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Text('Total de registros: ${statuses.length}'),
-                      Text('Codigos duplicados detectados: $duplicateCodes'),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (statuses.isEmpty)
-                const Card(
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text('No hay global statuses registrados.'),
-                  ),
-                )
-              else
-                ...statuses.map(
-                  (status) => Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        child: Text(status.sortOrder?.toString() ?? '-'),
-                      ),
-                      title: Text(status.name),
-                      subtitle: Text(
-                        'code: ${status.code}\n'
-                        'entity: ${status.entity}\n'
-                        'id: ${status.idGlobalStatus}\n'
-                        'category: ${status.category ?? 'Sin categoria'}\n'
-                        'terminal: ${status.isTerminal ? 'Si' : 'No'}\n'
-                        'activo: ${status.isActive ? 'Si' : 'No'}',
-                      ),
-                      isThreeLine: true,
-                    ),
-                  ),
-                ),
-            ],
+            );
+          }
+
+          return _buildTabContent(
+            context: context,
+            theme: theme,
+            colors: colors,
+            session: session,
           );
         },
       ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.home_rounded), label: 'Inicio'),
+          NavigationDestination(
+            icon: Icon(Icons.groups_rounded),
+            label: 'Empleados',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.apartment_rounded),
+            label: 'Proyectos',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.payments_rounded),
+            label: 'Nominas',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.tune_rounded),
+            label: 'Ajustes',
+          ),
+        ],
+      ),
     );
   }
+
+  Widget _buildTabContent({
+    required BuildContext context,
+    required ThemeData theme,
+    required ColorScheme colors,
+    required AuthSession session,
+  }) {
+    switch (_selectedIndex) {
+      case 0:
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Sesion actual',
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text('ID de usuario: ${session.userId}'),
+                    const SizedBox(height: 6),
+                    Text('Correo: ${session.email}'),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'La informacion mostrada proviene de la sesion persistida del usuario autenticado.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colors.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      case 4:
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Icon(Icons.dark_mode, color: colors.primary),
+                    const SizedBox(width: 12),
+                    const Expanded(child: Text('Modo oscuro')),
+                    Switch(
+                      value: widget.themeController.themeMode == ThemeMode.dark,
+                      onChanged: widget.themeController.toggleTheme,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: _handleLogout,
+              icon: const Icon(Icons.logout_rounded),
+              label: const Text('Cerrar sesion'),
+            ),
+          ],
+        );
+      default:
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              'La seccion "${_titles[_selectedIndex]}" estara disponible pronto.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: colors.onSurfaceVariant,
+              ),
+            ),
+          ),
+        );
+    }
+  }
 }
+
+const List<String> _titles = [
+  'Inicio',
+  'Empleados',
+  'Proyectos',
+  'Nominas',
+  'Ajustes',
+];

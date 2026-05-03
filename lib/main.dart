@@ -8,36 +8,39 @@ import 'core/helpers/app_error_handler.dart';
 Future<void> main() async {
   await AppErrorHandler.run(() async {
     WidgetsFlutterBinding.ensureInitialized();
-    runApp(const MyApp());
+    final themeController = ThemeController();
+    await themeController.loadSavedThemeMode();
+    runApp(MyApp(themeController: themeController));
   });
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required this.themeController});
+
+  final ThemeController themeController;
 
   @override
   State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
-  final ThemeController themeController = ThemeController();
   final AppDatabase database = AppDatabase();
   late final router = appRouter(
-    themeController: themeController,
+    themeController: widget.themeController,
     database: database,
   );
 
   @override
   void dispose() {
     database.close();
-    themeController.dispose();
+    widget.themeController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: themeController,
+      animation: widget.themeController,
       builder: (context, _) {
         return MaterialApp.router(
           debugShowCheckedModeBanner: false,
@@ -45,7 +48,7 @@ class _MyAppState extends State<MyApp> {
           routerConfig: router,
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
-          themeMode: themeController.themeMode,
+          themeMode: widget.themeController.themeMode,
         );
       },
     );

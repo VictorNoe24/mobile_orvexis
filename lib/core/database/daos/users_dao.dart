@@ -21,6 +21,11 @@ class UsersDao extends DatabaseAccessor<AppDatabase> with _$UsersDaoMixin {
         .getSingleOrNull();
   }
 
+  Future<User?> getUserByEmail(String email) {
+    return (select(users)..where((tbl) => tbl.email.equals(email)))
+        .getSingleOrNull();
+  }
+
   Future<int> insertUser(UsersCompanion entity) {
     return into(users).insert(entity);
   }
