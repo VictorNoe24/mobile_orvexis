@@ -27,6 +27,11 @@ class AuthRepositoryImpl implements AuthRepository {
     if (user == null) {
       throw Exception('No fue posible encontrar el usuario recien creado.');
     }
+    final relations = await _localDataSource.getOrganizationsByUser(user.idUser);
+    if (relations.isEmpty) {
+      throw Exception('No fue posible resolver la organizacion del usuario.');
+    }
+    final organizationId = relations.first.organization.idOrganization;
 
     await _credentialsLocalDataSource.saveCredentials(
       userId: user.idUser,
@@ -35,7 +40,11 @@ class AuthRepositoryImpl implements AuthRepository {
     );
 
     await _sessionLocalDataSource.saveSession(
-      AuthSession(userId: user.idUser, email: normalizedEmail),
+      AuthSession(
+        userId: user.idUser,
+        email: normalizedEmail,
+        organizationId: organizationId,
+      ),
     );
   }
 
@@ -65,7 +74,16 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception('La contrasena es incorrecta.');
     }
 
-    final session = AuthSession(userId: user.idUser, email: normalizedEmail);
+    final relations = await _localDataSource.getOrganizationsByUser(user.idUser);
+    if (relations.isEmpty) {
+      throw Exception('El usuario no pertenece a ninguna organizacion.');
+    }
+
+    final session = AuthSession(
+      userId: user.idUser,
+      email: normalizedEmail,
+      organizationId: relations.first.organization.idOrganization,
+    );
     await _sessionLocalDataSource.saveSession(session);
     return session;
   }

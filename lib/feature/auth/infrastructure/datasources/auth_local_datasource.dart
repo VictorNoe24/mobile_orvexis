@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:mobile_orvexis/core/database/app_database.dart';
+import 'package:mobile_orvexis/core/database/daos/org_users_dao.dart';
 import 'package:mobile_orvexis/core/helpers/uuid_helper.dart';
 import 'package:mobile_orvexis/feature/auth/domain/entities/register_admin_organization_input.dart';
 
@@ -74,5 +75,9 @@ class AuthLocalDataSource {
 
   Future<User?> getUserByEmail(String email) {
     return _database.usersDao.getUserByEmail(email.trim().toLowerCase());
+  }
+
+  Future<List<OrgUserWithDetails>> getOrganizationsByUser(String userId) {
+    return _database.orgUsersDao.getOrganizationsByUser(userId);
   }
 }

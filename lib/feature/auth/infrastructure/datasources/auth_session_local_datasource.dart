@@ -15,6 +15,7 @@ class AuthSessionLocalDataSource {
       jsonEncode({
         'userId': session.userId,
         'email': session.email,
+        'organizationId': session.organizationId,
       }),
     );
   }
@@ -31,10 +32,15 @@ class AuthSessionLocalDataSource {
 
     final userId = decoded['userId'] as String?;
     final email = decoded['email'] as String?;
+    final organizationId = decoded['organizationId'] as String?;
 
-    if (userId == null || email == null) return null;
+    if (userId == null || email == null || organizationId == null) return null;
 
-    return AuthSession(userId: userId, email: email);
+    return AuthSession(
+      userId: userId,
+      email: email,
+      organizationId: organizationId,
+    );
   }
 
   Future<bool> hasSession() async {

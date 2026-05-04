@@ -4,18 +4,25 @@ import 'package:mobile_orvexis/config/theme/theme_controller.dart';
 import 'package:mobile_orvexis/feature/auth/domain/entities/auth_session.dart';
 import 'package:mobile_orvexis/feature/auth/domain/usecases/get_current_session_usecase.dart';
 import 'package:mobile_orvexis/feature/auth/domain/usecases/logout_usecase.dart';
+import 'package:mobile_orvexis/feature/employees/presentation/screens/employees_screen.dart';
+import 'package:mobile_orvexis/feature/home/presentation/widgets/home_dashboard_tab.dart';
+import 'package:mobile_orvexis/feature/home/presentation/widgets/home_placeholder_tab.dart';
+import 'package:mobile_orvexis/feature/home/presentation/widgets/home_settings_tab.dart';
+import 'package:mobile_orvexis/feature/employees/infrastructure/datasources/employees_local_datasource.dart';
 
 class HomeScreen extends StatefulWidget {
-  final ThemeController themeController;
-  final GetCurrentSessionUseCase getCurrentSessionUseCase;
-  final LogoutUseCase logoutUseCase;
-
   const HomeScreen({
     super.key,
     required this.themeController,
     required this.getCurrentSessionUseCase,
     required this.logoutUseCase,
+    required this.employeesLocalDataSource,
   });
+
+  final ThemeController themeController;
+  final GetCurrentSessionUseCase getCurrentSessionUseCase;
+  final LogoutUseCase logoutUseCase;
+  final EmployeesLocalDataSource employeesLocalDataSource;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -23,6 +30,10 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+
+  Future<void> _handleManageRoles() async {
+    await context.push('/roles');
+  }
 
   Future<void> _handleLogout() async {
     await widget.logoutUseCase();
@@ -32,21 +43,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_titles[_selectedIndex]),
-        actions: _selectedIndex == 4
-            ? [
-                TextButton(
-                  onPressed: _handleLogout,
-                  child: const Text('Cerrar sesion'),
-                ),
-              ]
-            : null,
-      ),
+      appBar: _selectedIndex == 0
+          ? null
+          : AppBar(
+              title: Text(_titles[_selectedIndex]),
+              actions: _selectedIndex == 4
+                  ? [
+                      TextButton(
+                        onPressed: _handleLogout,
+                        child: const Text('Cerrar sesion'),
+                      ),
+                    ]
+                  : null,
+            ),
       body: FutureBuilder<AuthSession?>(
         future: widget.getCurrentSessionUseCase(),
         builder: (context, snapshot) {
@@ -67,7 +77,6 @@ class _HomeScreenState extends State<HomeScreen> {
           }
 
           final session = snapshot.data;
-
           if (session == null) {
             return const Center(
               child: Padding(
@@ -80,12 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           }
 
-          return _buildTabContent(
-            context: context,
-            theme: theme,
-            colors: colors,
-            session: session,
-          );
+          return _buildTabContent(session);
         },
       ),
       bottomNavigationBar: NavigationBar(
@@ -115,94 +119,32 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+      floatingActionButton: _selectedIndex == 1
+          ? FloatingActionButton(
+              onPressed: () => context.push('/employees/create'),
+              child: const Icon(Icons.add_rounded),
+            )
+          : null,
     );
   }
 
-  Widget _buildTabContent({
-    required BuildContext context,
-    required ThemeData theme,
-    required ColorScheme colors,
-    required AuthSession session,
-  }) {
+  Widget _buildTabContent(AuthSession session) {
     switch (_selectedIndex) {
       case 0:
-        return ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Sesion actual',
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text('ID de usuario: ${session.userId}'),
-                    const SizedBox(height: 6),
-                    Text('Correo: ${session.email}'),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  'La informacion mostrada proviene de la sesion persistida del usuario autenticado.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colors.onSurfaceVariant,
-                    height: 1.4,
-                  ),
-                ),
-              ),
-            ),
-          ],
+        return HomeDashboardTab(session: session);
+      case 1:
+        return EmployeesScreen(
+          getCurrentSessionUseCase: widget.getCurrentSessionUseCase,
+          employeesLocalDataSource: widget.employeesLocalDataSource,
         );
       case 4:
-        return ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Icon(Icons.dark_mode, color: colors.primary),
-                    const SizedBox(width: 12),
-                    const Expanded(child: Text('Modo oscuro')),
-                    Switch(
-                      value: widget.themeController.themeMode == ThemeMode.dark,
-                      onChanged: widget.themeController.toggleTheme,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: _handleLogout,
-              icon: const Icon(Icons.logout_rounded),
-              label: const Text('Cerrar sesion'),
-            ),
-          ],
+        return HomeSettingsTab(
+          themeController: widget.themeController,
+          onManageRoles: _handleManageRoles,
+          onLogout: _handleLogout,
         );
       default:
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Text(
-              'La seccion "${_titles[_selectedIndex]}" estara disponible pronto.',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: colors.onSurfaceVariant,
-              ),
-            ),
-          ),
-        );
+        return HomePlaceholderTab(title: _titles[_selectedIndex]);
     }
   }
 }
