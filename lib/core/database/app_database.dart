@@ -65,30 +65,31 @@ part 'app_database.g.dart';
     EmployeeLoans,
     LoanInstallments,
   ],
-  daos: [
-    OrganizationsDao,
-    UsersDao,
-    OrgUsersDao,
-  ],
+  daos: [OrganizationsDao, UsersDao, OrgUsersDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (m) async {
-          await m.createAll();
-          await createUpdatedAtTriggers(this);
-          await GlobalStatusesSeeder(this).seed();
-        },
-        beforeOpen: (details) async {
-          await createUpdatedAtTriggers(this);
-          await GlobalStatusesSeeder(this).seed();
-        },
-      );
+    onCreate: (m) async {
+      await m.createAll();
+      await createUpdatedAtTriggers(this);
+      await GlobalStatusesSeeder(this).seed();
+    },
+    beforeOpen: (details) async {
+      await createUpdatedAtTriggers(this);
+      await GlobalStatusesSeeder(this).seed();
+    },
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.addColumn(workUnits, workUnits.imagePath);
+      }
+    },
+  );
 }
 
 LazyDatabase _openConnection() {

@@ -34,10 +34,8 @@ class RegisterDropdownField extends StatelessWidget {
             initialValue: value,
             items: items
                 .map(
-                  (item) => DropdownMenuItem<String>(
-                    value: item,
-                    child: Text(item),
-                  ),
+                  (item) =>
+                      DropdownMenuItem<String>(value: item, child: Text(item)),
                 )
                 .toList(),
             onChanged: onChanged,

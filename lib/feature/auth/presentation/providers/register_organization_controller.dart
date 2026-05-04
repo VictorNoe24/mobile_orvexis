@@ -7,7 +7,7 @@ class RegisterOrganizationController extends ChangeNotifier {
   RegisterOrganizationController(this._registerAdminWithOrganizationUseCase);
 
   final RegisterAdminWithOrganizationUseCase
-      _registerAdminWithOrganizationUseCase;
+  _registerAdminWithOrganizationUseCase;
 
   int currentStep = 0;
   bool acceptedTerms = false;

@@ -4,10 +4,7 @@ import 'package:mobile_orvexis/feature/roles/domain/entities/create_role_input.d
 import 'package:mobile_orvexis/feature/roles/domain/usecases/create_role_usecase.dart';
 
 class CreateRoleController extends ChangeNotifier {
-  CreateRoleController(
-    this._getCurrentSessionUseCase,
-    this._createRoleUseCase,
-  );
+  CreateRoleController(this._getCurrentSessionUseCase, this._createRoleUseCase);
 
   final GetCurrentSessionUseCase _getCurrentSessionUseCase;
   final CreateRoleUseCase _createRoleUseCase;

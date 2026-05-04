@@ -235,8 +235,7 @@ class _RegisterOrganizationScreenState
                             requiredValidator: _requiredValidator,
                             emailValidator: _emailValidator,
                             passwordValidator: _passwordValidator,
-                            confirmPasswordValidator:
-                                _confirmPasswordValidator,
+                            confirmPasswordValidator: _confirmPasswordValidator,
                             onContinue: controller.isSaving
                                 ? null
                                 : _handlePrimaryAction,

@@ -23,14 +23,15 @@ class GlobalStatusesSeeder {
   }
 
   Future<void> seedByEntity(String entity) async {
-    final existingStatuses =
-        await (db.select(db.globalStatuses)
-              ..where((tbl) => tbl.entity.equals(entity)))
-            .get();
+    final existingStatuses = await (db.select(
+      db.globalStatuses,
+    )..where((tbl) => tbl.entity.equals(entity))).get();
     final existingCodes = existingStatuses.map((row) => row.code).toSet();
 
     final filteredData = globalStatusSeedData
-        .where((item) => item.entity == entity && !existingCodes.contains(item.code))
+        .where(
+          (item) => item.entity == entity && !existingCodes.contains(item.code),
+        )
         .map((item) => item.toCompanion())
         .toList();
 

@@ -10,9 +10,7 @@ class RolesRepositoryImpl implements RolesRepository {
   final RolesLocalDataSource _dataSource;
 
   @override
-  Future<List<RoleItem>> getRoles({
-    required String organizationId,
-  }) {
+  Future<List<RoleItem>> getRoles({required String organizationId}) {
     return _dataSource.getRoles(organizationId: organizationId);
   }
 
@@ -32,10 +30,7 @@ class RolesRepositoryImpl implements RolesRepository {
     required String organizationId,
     required CreateRoleInput input,
   }) {
-    return _dataSource.createRole(
-      organizationId: organizationId,
-      input: input,
-    );
+    return _dataSource.createRole(organizationId: organizationId, input: input);
   }
 
   @override

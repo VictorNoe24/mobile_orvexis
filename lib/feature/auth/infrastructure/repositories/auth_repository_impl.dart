@@ -19,7 +19,9 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthSessionLocalDataSource _sessionLocalDataSource;
 
   @override
-  Future<void> registerAdminWithOrganization(RegisterAdminOrganizationInput input) async {
+  Future<void> registerAdminWithOrganization(
+    RegisterAdminOrganizationInput input,
+  ) async {
     await _localDataSource.registerAdminWithOrganization(input);
 
     final normalizedEmail = input.adminUser.email.trim().toLowerCase();
@@ -27,7 +29,9 @@ class AuthRepositoryImpl implements AuthRepository {
     if (user == null) {
       throw Exception('No fue posible encontrar el usuario recien creado.');
     }
-    final relations = await _localDataSource.getOrganizationsByUser(user.idUser);
+    final relations = await _localDataSource.getOrganizationsByUser(
+      user.idUser,
+    );
     if (relations.isEmpty) {
       throw Exception('No fue posible resolver la organizacion del usuario.');
     }
@@ -74,7 +78,9 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception('La contrasena es incorrecta.');
     }
 
-    final relations = await _localDataSource.getOrganizationsByUser(user.idUser);
+    final relations = await _localDataSource.getOrganizationsByUser(
+      user.idUser,
+    );
     if (relations.isEmpty) {
       throw Exception('El usuario no pertenece a ninguna organizacion.');
     }

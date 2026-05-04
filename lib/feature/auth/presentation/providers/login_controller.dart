@@ -25,10 +25,7 @@ class LoginController extends ChangeNotifier {
 
     try {
       return await _loginUseCase(
-        LoginInput(
-          email: email.trim(),
-          password: password.trim(),
-        ),
+        LoginInput(email: email.trim(), password: password.trim()),
       );
     } finally {
       isLoading = false;

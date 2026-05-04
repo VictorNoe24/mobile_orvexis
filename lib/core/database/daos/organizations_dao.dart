@@ -18,9 +18,9 @@ class OrganizationsDao extends DatabaseAccessor<AppDatabase>
   }
 
   Future<Organization?> getOrganizationById(String id) {
-    return (select(organizations)
-          ..where((tbl) => tbl.idOrganization.equals(id)))
-        .getSingleOrNull();
+    return (select(
+      organizations,
+    )..where((tbl) => tbl.idOrganization.equals(id))).getSingleOrNull();
   }
 
   Future<int> insertOrganization(OrganizationsCompanion entity) {
@@ -32,8 +32,8 @@ class OrganizationsDao extends DatabaseAccessor<AppDatabase>
   }
 
   Future<int> deleteOrganizationById(String id) {
-    return (delete(organizations)
-          ..where((tbl) => tbl.idOrganization.equals(id)))
-        .go();
+    return (delete(
+      organizations,
+    )..where((tbl) => tbl.idOrganization.equals(id))).go();
   }
 }

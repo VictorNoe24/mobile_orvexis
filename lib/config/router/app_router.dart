@@ -8,8 +8,10 @@ import 'package:mobile_orvexis/feature/auth/domain/usecases/logout_usecase.dart'
 import 'package:mobile_orvexis/feature/auth/domain/usecases/register_admin_with_organization_usecase.dart';
 import 'package:mobile_orvexis/feature/employees/domain/usecases/create_employee_usecase.dart';
 import 'package:mobile_orvexis/feature/employees/domain/usecases/get_employee_by_id_usecase.dart';
+import 'package:mobile_orvexis/feature/employees/domain/usecases/get_employee_compensation_usecase.dart';
 import 'package:mobile_orvexis/feature/employees/domain/usecases/get_employee_role_names_usecase.dart';
 import 'package:mobile_orvexis/feature/employees/domain/usecases/update_employee_usecase.dart';
+import 'package:mobile_orvexis/feature/employees/domain/usecases/update_employee_compensation_usecase.dart';
 import 'package:mobile_orvexis/feature/auth/infrastructure/datasources/auth_credentials_local_datasource.dart';
 import 'package:mobile_orvexis/feature/auth/infrastructure/datasources/auth_local_datasource.dart';
 import 'package:mobile_orvexis/feature/auth/infrastructure/datasources/auth_session_local_datasource.dart';
@@ -19,9 +21,32 @@ import 'package:mobile_orvexis/feature/auth/presentation/providers/register_orga
 import 'package:mobile_orvexis/feature/employees/infrastructure/datasources/employees_local_datasource.dart';
 import 'package:mobile_orvexis/feature/employees/infrastructure/repositories/employees_repository_impl.dart';
 import 'package:mobile_orvexis/feature/employees/presentation/providers/create_employee_controller.dart';
+import 'package:mobile_orvexis/feature/employees/presentation/providers/employee_compensation_controller.dart';
 import 'package:mobile_orvexis/feature/employees/presentation/providers/edit_employee_controller.dart';
+import 'package:mobile_orvexis/feature/employees/presentation/screens/employee_compensation_screen.dart';
 import 'package:mobile_orvexis/feature/employees/presentation/screens/create_employee_screen.dart';
 import 'package:mobile_orvexis/feature/employees/presentation/screens/edit_employee_screen.dart';
+import 'package:mobile_orvexis/feature/projects/domain/usecases/create_project_usecase.dart';
+import 'package:mobile_orvexis/feature/projects/domain/usecases/get_assignable_project_employees_usecase.dart';
+import 'package:mobile_orvexis/feature/projects/domain/usecases/get_project_assigned_employees_usecase.dart';
+import 'package:mobile_orvexis/feature/projects/domain/usecases/get_project_detail_usecase.dart';
+import 'package:mobile_orvexis/feature/projects/domain/usecases/get_project_form_data_usecase.dart';
+import 'package:mobile_orvexis/feature/projects/domain/usecases/get_projects_usecase.dart';
+import 'package:mobile_orvexis/feature/projects/domain/usecases/assign_employees_to_project_usecase.dart';
+import 'package:mobile_orvexis/feature/projects/domain/usecases/remove_employee_from_project_usecase.dart';
+import 'package:mobile_orvexis/feature/projects/domain/usecases/update_project_usecase.dart';
+import 'package:mobile_orvexis/feature/projects/infrastructure/datasources/projects_local_datasource.dart';
+import 'package:mobile_orvexis/feature/projects/infrastructure/repositories/projects_repository_impl.dart';
+import 'package:mobile_orvexis/feature/projects/presentation/providers/assign_project_employees_controller.dart';
+import 'package:mobile_orvexis/feature/projects/presentation/providers/create_project_controller.dart';
+import 'package:mobile_orvexis/feature/projects/presentation/providers/edit_project_controller.dart';
+import 'package:mobile_orvexis/feature/projects/presentation/providers/project_detail_controller.dart';
+import 'package:mobile_orvexis/feature/projects/presentation/screens/assign_project_employees_screen.dart';
+import 'package:mobile_orvexis/feature/projects/presentation/screens/create_project_screen.dart';
+import 'package:mobile_orvexis/feature/projects/presentation/screens/edit_project_screen.dart';
+import 'package:mobile_orvexis/feature/projects/presentation/screens/project_activities_screen.dart';
+import 'package:mobile_orvexis/feature/projects/presentation/screens/project_assigned_employees_screen.dart';
+import 'package:mobile_orvexis/feature/projects/presentation/screens/project_detail_screen.dart';
 import 'package:mobile_orvexis/feature/roles/domain/usecases/create_role_usecase.dart';
 import 'package:mobile_orvexis/feature/roles/domain/usecases/get_role_by_id_usecase.dart';
 import 'package:mobile_orvexis/feature/roles/domain/usecases/get_roles_usecase.dart';
@@ -65,7 +90,33 @@ GoRouter appRouter({
   final getEmployeeRoleNamesUseCase = GetEmployeeRoleNamesUseCase(
     employeesRepository,
   );
+  final getEmployeeCompensationUseCase = GetEmployeeCompensationUseCase(
+    employeesRepository,
+  );
   final updateEmployeeUseCase = UpdateEmployeeUseCase(employeesRepository);
+  final updateEmployeeCompensationUseCase = UpdateEmployeeCompensationUseCase(
+    employeesRepository,
+  );
+  final projectsLocalDataSource = ProjectsLocalDataSource(database);
+  final projectsRepository = ProjectsRepositoryImpl(projectsLocalDataSource);
+  final getProjectsUseCase = GetProjectsUseCase(projectsRepository);
+  final createProjectUseCase = CreateProjectUseCase(projectsRepository);
+  final getProjectDetailUseCase = GetProjectDetailUseCase(projectsRepository);
+  final getProjectAssignedEmployeesUseCase = GetProjectAssignedEmployeesUseCase(
+    projectsRepository,
+  );
+  final getProjectFormDataUseCase = GetProjectFormDataUseCase(
+    projectsRepository,
+  );
+  final getAssignableProjectEmployeesUseCase =
+      GetAssignableProjectEmployeesUseCase(projectsRepository);
+  final assignEmployeesToProjectUseCase = AssignEmployeesToProjectUseCase(
+    projectsRepository,
+  );
+  final removeEmployeeFromProjectUseCase = RemoveEmployeeFromProjectUseCase(
+    projectsRepository,
+  );
+  final updateProjectUseCase = UpdateProjectUseCase(projectsRepository);
   final rolesLocalDataSource = RolesLocalDataSource(database);
   final rolesRepository = RolesRepositoryImpl(rolesLocalDataSource);
   final createRoleUseCase = CreateRoleUseCase(rolesRepository);
@@ -91,22 +142,88 @@ GoRouter appRouter({
       ),
       GoRoute(
         path: '/register-organization',
-        builder: (context, state) =>
-            RegisterOrganizationScreen(
-              controller: RegisterOrganizationController(
-                registerAdminWithOrganizationUseCase,
-              ),
-            ),
+        builder: (context, state) => RegisterOrganizationScreen(
+          controller: RegisterOrganizationController(
+            registerAdminWithOrganizationUseCase,
+          ),
+        ),
       ),
       GoRoute(
         path: '/home',
-        builder: (context, state) =>
-            HomeScreen(
-              themeController: themeController,
-              getCurrentSessionUseCase: getCurrentSessionUseCase,
-              logoutUseCase: logoutUseCase,
-              employeesLocalDataSource: employeesLocalDataSource,
-            ),
+        builder: (context, state) => HomeScreen(
+          themeController: themeController,
+          getCurrentSessionUseCase: getCurrentSessionUseCase,
+          logoutUseCase: logoutUseCase,
+          employeesLocalDataSource: employeesLocalDataSource,
+          getProjectsUseCase: getProjectsUseCase,
+        ),
+      ),
+      GoRoute(
+        path: '/projects/create',
+        builder: (context, state) => CreateProjectScreen(
+          controller: CreateProjectController(
+            getCurrentSessionUseCase,
+            createProjectUseCase,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/projects/:projectId',
+        builder: (context, state) => ProjectDetailScreen(
+          projectId: state.pathParameters['projectId']!,
+          controller: ProjectDetailController(
+            getCurrentSessionUseCase,
+            getProjectDetailUseCase,
+            getProjectAssignedEmployeesUseCase,
+            removeEmployeeFromProjectUseCase,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/projects/:projectId/employees',
+        builder: (context, state) => ProjectAssignedEmployeesScreen(
+          projectId: state.pathParameters['projectId']!,
+          controller: ProjectDetailController(
+            getCurrentSessionUseCase,
+            getProjectDetailUseCase,
+            getProjectAssignedEmployeesUseCase,
+            removeEmployeeFromProjectUseCase,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/projects/:projectId/activities',
+        builder: (context, state) => ProjectActivitiesScreen(
+          projectId: state.pathParameters['projectId']!,
+          controller: ProjectDetailController(
+            getCurrentSessionUseCase,
+            getProjectDetailUseCase,
+            getProjectAssignedEmployeesUseCase,
+            removeEmployeeFromProjectUseCase,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/projects/:projectId/edit',
+        builder: (context, state) => EditProjectScreen(
+          projectId: state.pathParameters['projectId']!,
+          controller: EditProjectController(
+            getCurrentSessionUseCase,
+            getProjectFormDataUseCase,
+            updateProjectUseCase,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/projects/:projectId/assign-employees',
+        builder: (context, state) => AssignProjectEmployeesScreen(
+          projectId: state.pathParameters['projectId']!,
+          controller: AssignProjectEmployeesController(
+            getCurrentSessionUseCase,
+            getAssignableProjectEmployeesUseCase,
+            assignEmployeesToProjectUseCase,
+          ),
+        ),
       ),
       GoRoute(
         path: '/employees/create',
@@ -127,6 +244,17 @@ GoRouter appRouter({
             getEmployeeByIdUseCase,
             getEmployeeRoleNamesUseCase,
             updateEmployeeUseCase,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/employees/:employeeId/compensation',
+        builder: (context, state) => EmployeeCompensationScreen(
+          employeeId: state.pathParameters['employeeId']!,
+          controller: EmployeeCompensationController(
+            getCurrentSessionUseCase,
+            getEmployeeCompensationUseCase,
+            updateEmployeeCompensationUseCase,
           ),
         ),
       ),

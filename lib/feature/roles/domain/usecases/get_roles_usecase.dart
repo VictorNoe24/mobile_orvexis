@@ -6,9 +6,7 @@ class GetRolesUseCase {
 
   final RolesRepository _repository;
 
-  Future<List<RoleItem>> call({
-    required String organizationId,
-  }) {
+  Future<List<RoleItem>> call({required String organizationId}) {
     return _repository.getRoles(organizationId: organizationId);
   }
 }

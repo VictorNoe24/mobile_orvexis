@@ -4,26 +4,26 @@ import 'package:mobile_orvexis/core/database/global_status_defaults.dart';
 import 'package:mobile_orvexis/core/helpers/date_helper.dart';
 import 'package:mobile_orvexis/core/helpers/uuid_helper.dart';
 import 'package:mobile_orvexis/feature/employees/domain/entities/create_employee_input.dart';
+import 'package:mobile_orvexis/feature/employees/domain/entities/employee_compensation_form_data.dart';
 import 'package:mobile_orvexis/feature/employees/domain/entities/employee.dart';
 import 'package:mobile_orvexis/feature/employees/domain/entities/employee_form_data.dart';
 import 'package:mobile_orvexis/feature/employees/domain/entities/employee_filter.dart';
 import 'package:mobile_orvexis/feature/employees/domain/entities/employees_page.dart';
+import 'package:mobile_orvexis/feature/employees/domain/entities/update_employee_compensation_input.dart';
 
 class EmployeesLocalDataSource {
   const EmployeesLocalDataSource(this._database);
 
   final AppDatabase _database;
 
-  Future<List<String>> getRoleNames({
-    required String organizationId,
-  }) async {
-    final rows = await (_database.select(_database.roles)
-          ..where(
-            (tbl) =>
-                tbl.organizationId.equals(organizationId) &
-                tbl.globalStatusId.equals(GlobalStatusDefaults.activeId),
-          ))
-        .get();
+  Future<List<String>> getRoleNames({required String organizationId}) async {
+    final rows =
+        await (_database.select(_database.roles)..where(
+              (tbl) =>
+                  tbl.organizationId.equals(organizationId) &
+                  tbl.globalStatusId.equals(GlobalStatusDefaults.activeId),
+            ))
+            .get();
 
     final seen = <String>{};
     final roleNames = <String>[];
@@ -46,8 +46,9 @@ class EmployeesLocalDataSource {
     required int page,
     required int pageSize,
   }) async {
-    final employeeRows = await _database.customSelect(
-      '''
+    final employeeRows = await _database
+        .customSelect(
+          '''
       SELECT
         u.id_user AS user_id,
         u.name AS user_name,
@@ -68,42 +69,52 @@ class EmployeesLocalDataSource {
       INNER JOIN users u ON u.id_user = ou.user_id
       WHERE ou.organization_id = ?
       ''',
-      variables: [Variable.withString(organizationId)],
-      readsFrom: {_database.orgUsers, _database.users, _database.orgUserRoles, _database.roles},
-    ).get();
+          variables: [Variable.withString(organizationId)],
+          readsFrom: {
+            _database.orgUsers,
+            _database.users,
+            _database.orgUserRoles,
+            _database.roles,
+          },
+        )
+        .get();
 
     final normalizedQuery = query.trim().toLowerCase();
-    final mapped = employeeRows.map((row) {
-      final fullName = _composeDisplayNameFromParts(
-        row.read<String>('user_name'),
-        row.read<String?>('user_first_surname'),
-        row.read<String?>('user_second_last_name'),
-      );
-      return Employee(
-        id: row.read<String>('user_id'),
-        initials: _buildInitialsFromName(fullName),
-        name: fullName,
-        role: row.read<String?>('role_name') ?? 'Sin rol',
-        startDate: _formatStoredDate(row.read<String?>('start_date')),
-        isActive:
-            row.read<String>('user_global_status_id') ==
-            GlobalStatusDefaults.activeId,
-      );
-    }).where((employee) {
-      final matchesFilter = switch (filter) {
-        EmployeeFilter.all => true,
-        EmployeeFilter.active => employee.isActive,
-        EmployeeFilter.inactive => !employee.isActive,
-      };
+    final mapped =
+        employeeRows
+            .map((row) {
+              final fullName = _composeDisplayNameFromParts(
+                row.read<String>('user_name'),
+                row.read<String?>('user_first_surname'),
+                row.read<String?>('user_second_last_name'),
+              );
+              return Employee(
+                id: row.read<String>('user_id'),
+                initials: _buildInitialsFromName(fullName),
+                name: fullName,
+                role: row.read<String?>('role_name') ?? 'Sin rol',
+                startDate: _formatStoredDate(row.read<String?>('start_date')),
+                isActive:
+                    row.read<String>('user_global_status_id') ==
+                    GlobalStatusDefaults.activeId,
+              );
+            })
+            .where((employee) {
+              final matchesFilter = switch (filter) {
+                EmployeeFilter.all => true,
+                EmployeeFilter.active => employee.isActive,
+                EmployeeFilter.inactive => !employee.isActive,
+              };
 
-      final matchesQuery =
-          normalizedQuery.isEmpty ||
-          employee.name.toLowerCase().contains(normalizedQuery) ||
-          employee.role.toLowerCase().contains(normalizedQuery);
+              final matchesQuery =
+                  normalizedQuery.isEmpty ||
+                  employee.name.toLowerCase().contains(normalizedQuery) ||
+                  employee.role.toLowerCase().contains(normalizedQuery);
 
-      return matchesFilter && matchesQuery;
-    }).toList()
-      ..sort((a, b) => a.name.compareTo(b.name));
+              return matchesFilter && matchesQuery;
+            })
+            .toList()
+          ..sort((a, b) => a.name.compareTo(b.name));
 
     final start = page * pageSize;
     if (start >= mapped.length) {
@@ -180,14 +191,16 @@ class EmployeesLocalDataSource {
         roleName: input.roleName,
       );
 
-      await _database.into(_database.orgUserRoles).insert(
-        OrgUserRolesCompanion(
-          idOrgUserRole: Value(UuidHelper.generate()),
-          orgUserId: Value(orgUserId),
-          roleId: Value(roleId),
-          assignedAt: Value(DateTime.now()),
-        ),
-      );
+      await _database
+          .into(_database.orgUserRoles)
+          .insert(
+            OrgUserRolesCompanion(
+              idOrgUserRole: Value(UuidHelper.generate()),
+              orgUserId: Value(orgUserId),
+              roleId: Value(roleId),
+              assignedAt: Value(DateTime.now()),
+            ),
+          );
     });
   }
 
@@ -212,9 +225,10 @@ class EmployeesLocalDataSource {
     }
 
     await _database.transaction(() async {
-      final affectedRows = await (_database.update(_database.users)
-            ..where((tbl) => tbl.idUser.equals(employeeId)))
-          .write(
+      final affectedRows =
+          await (_database.update(
+            _database.users,
+          )..where((tbl) => tbl.idUser.equals(employeeId))).write(
             UsersCompanion(
               name: Value(input.name.trim()),
               firstSurname: Value(input.firstSurname.trim()),
@@ -244,24 +258,166 @@ class EmployeesLocalDataSource {
               .getSingleOrNull();
 
       if (currentRoleRelation == null) {
-        await _database.into(_database.orgUserRoles).insert(
-          OrgUserRolesCompanion(
-            idOrgUserRole: Value(UuidHelper.generate()),
-            orgUserId: Value(relation.orgUserId),
-            roleId: Value(roleId),
-            assignedAt: Value(DateTime.now()),
-          ),
-        );
+        await _database
+            .into(_database.orgUserRoles)
+            .insert(
+              OrgUserRolesCompanion(
+                idOrgUserRole: Value(UuidHelper.generate()),
+                orgUserId: Value(relation.orgUserId),
+                roleId: Value(roleId),
+                assignedAt: Value(DateTime.now()),
+              ),
+            );
       } else {
-        await (_database.update(_database.orgUserRoles)
-              ..where(
-                (tbl) =>
-                    tbl.idOrgUserRole.equals(currentRoleRelation.idOrgUserRole),
-              ))
+        await (_database.update(_database.orgUserRoles)..where(
+              (tbl) =>
+                  tbl.idOrgUserRole.equals(currentRoleRelation.idOrgUserRole),
+            ))
             .write(
               OrgUserRolesCompanion(
                 roleId: Value(roleId),
                 assignedAt: Value(DateTime.now()),
+              ),
+            );
+      }
+
+      if (!input.isActive) {
+        await (_database.update(_database.workUnitAssignments)..where(
+              (tbl) =>
+                  tbl.organizationId.equals(organizationId) &
+                  tbl.orgUserId.equals(relation.orgUserId) &
+                  tbl.globalStatusId.equals(GlobalStatusDefaults.activeId),
+            ))
+            .write(
+              WorkUnitAssignmentsCompanion(
+                globalStatusId: Value(GlobalStatusDefaults.inactiveId),
+                endDate: Value(DateTime.now()),
+              ),
+            );
+      }
+    });
+  }
+
+  Future<EmployeeCompensationFormData> getEmployeeCompensation({
+    required String organizationId,
+    required String employeeId,
+  }) async {
+    final relation = await _getEmployeeRecord(
+      organizationId: organizationId,
+      userId: employeeId,
+    );
+
+    if (relation == null) {
+      throw Exception('No se encontro el empleado solicitado.');
+    }
+
+    final contract =
+        await (_database.select(_database.employeeContracts)..where(
+              (tbl) =>
+                  tbl.organizationId.equals(organizationId) &
+                  tbl.orgUserId.equals(relation.orgUserId) &
+                  tbl.globalStatusId.equals(GlobalStatusDefaults.activeId),
+            ))
+            .getSingleOrNull();
+
+    if (contract == null) {
+      return const EmployeeCompensationFormData(
+        payFrequency: 'weekly',
+        baseSalary: null,
+        dailyRate: null,
+        workDaysPerPeriod: 6,
+        contractType: 'fixed_salary',
+      );
+    }
+
+    final policy =
+        await (_database.select(_database.payrollPolicies)
+              ..where((tbl) => tbl.idPolicy.equals(contract.policyId)))
+            .getSingleOrNull();
+
+    final baseSalary = contract.baseSalary;
+    final dailyRate = contract.dailyRate;
+    final workDays = (baseSalary != null && dailyRate != null && dailyRate > 0)
+        ? (baseSalary / dailyRate).round().clamp(1, 31)
+        : ((policy?.payFrequency ?? 'weekly') == 'biweekly' ? 12 : 6);
+
+    return EmployeeCompensationFormData(
+      contractId: contract.idContract,
+      payFrequency: policy?.payFrequency ?? 'weekly',
+      baseSalary: baseSalary,
+      dailyRate: dailyRate,
+      workDaysPerPeriod: workDays,
+      contractType: contract.contractType,
+    );
+  }
+
+  Future<void> updateEmployeeCompensation({
+    required String organizationId,
+    required String employeeId,
+    required UpdateEmployeeCompensationInput input,
+  }) async {
+    final relation = await _getEmployeeRecord(
+      organizationId: organizationId,
+      userId: employeeId,
+    );
+
+    if (relation == null) {
+      throw Exception('No se encontro el empleado solicitado.');
+    }
+
+    if (input.baseSalary <= 0) {
+      throw Exception('Ingresa un sueldo fijo mayor a cero.');
+    }
+    if (input.workDaysPerPeriod <= 0) {
+      throw Exception('Ingresa los dias laborables del periodo.');
+    }
+
+    final dailyRate = input.baseSalary / input.workDaysPerPeriod;
+
+    await _database.transaction(() async {
+      final policyId = await _resolvePayrollPolicyId(
+        organizationId: organizationId,
+        payFrequency: input.payFrequency,
+      );
+
+      final existingContract =
+          await (_database.select(_database.employeeContracts)..where(
+                (tbl) =>
+                    tbl.organizationId.equals(organizationId) &
+                    tbl.orgUserId.equals(relation.orgUserId) &
+                    tbl.globalStatusId.equals(GlobalStatusDefaults.activeId),
+              ))
+              .getSingleOrNull();
+
+      if (existingContract == null) {
+        await _database
+            .into(_database.employeeContracts)
+            .insert(
+              EmployeeContractsCompanion(
+                idContract: Value(UuidHelper.generate()),
+                organizationId: Value(organizationId),
+                orgUserId: Value(relation.orgUserId),
+                policyId: Value(policyId),
+                contractType: const Value('fixed_salary'),
+                baseSalary: Value(input.baseSalary),
+                dailyRate: Value(dailyRate),
+                hourlyRate: const Value.absent(),
+                startDate: Value(DateTime.now()),
+              ),
+            );
+      } else {
+        await (_database.update(_database.employeeContracts)..where(
+              (tbl) => tbl.idContract.equals(existingContract.idContract),
+            ))
+            .write(
+              EmployeeContractsCompanion(
+                policyId: Value(policyId),
+                contractType: const Value('fixed_salary'),
+                baseSalary: Value(input.baseSalary),
+                dailyRate: Value(dailyRate),
+                hourlyRate: const Value(null),
+                startDate: Value(existingContract.startDate ?? DateTime.now()),
+                endDate: const Value(null),
               ),
             );
       }
@@ -272,8 +428,9 @@ class EmployeesLocalDataSource {
     required String organizationId,
     required String userId,
   }) async {
-    final row = await _database.customSelect(
-      '''
+    final row = await _database
+        .customSelect(
+          '''
       SELECT
         ou.id_org_user AS org_user_id,
         u.id_user AS user_id,
@@ -296,12 +453,18 @@ class EmployeesLocalDataSource {
       WHERE ou.organization_id = ? AND ou.user_id = ?
       LIMIT 1
       ''',
-      variables: [
-        Variable.withString(organizationId),
-        Variable.withString(userId),
-      ],
-      readsFrom: {_database.orgUsers, _database.users, _database.orgUserRoles, _database.roles},
-    ).getSingleOrNull();
+          variables: [
+            Variable.withString(organizationId),
+            Variable.withString(userId),
+          ],
+          readsFrom: {
+            _database.orgUsers,
+            _database.users,
+            _database.orgUserRoles,
+            _database.roles,
+          },
+        )
+        .getSingleOrNull();
 
     if (row == null) return null;
 
@@ -325,44 +488,88 @@ class EmployeesLocalDataSource {
     final normalizedName = roleName.trim();
     final normalizedCode = _normalizeRoleCode(normalizedName);
 
-    final existingRole = await (_database.select(_database.roles)
-          ..where(
-            (tbl) =>
-                tbl.organizationId.equals(organizationId) &
-                (tbl.code.equals(normalizedCode) | tbl.name.equals(normalizedName)),
-          ))
-        .getSingleOrNull();
+    final existingRole =
+        await (_database.select(_database.roles)..where(
+              (tbl) =>
+                  tbl.organizationId.equals(organizationId) &
+                  (tbl.code.equals(normalizedCode) |
+                      tbl.name.equals(normalizedName)),
+            ))
+            .getSingleOrNull();
 
     if (existingRole != null) {
       return existingRole.idRole;
     }
 
     final roleId = UuidHelper.generate();
-    await _database.into(_database.roles).insert(
-      RolesCompanion(
-        idRole: Value(roleId),
-        organizationId: Value(organizationId),
-        code: Value(normalizedCode),
-        name: Value(normalizedName),
-        isSystem: const Value(false),
-      ),
-    );
+    await _database
+        .into(_database.roles)
+        .insert(
+          RolesCompanion(
+            idRole: Value(roleId),
+            organizationId: Value(organizationId),
+            code: Value(normalizedCode),
+            name: Value(normalizedName),
+            isSystem: const Value(false),
+          ),
+        );
     return roleId;
   }
 
   Future<String?> _findUserIdByEmail(String normalizedEmail) async {
-    final row = await _database.customSelect(
-      '''
+    final row = await _database
+        .customSelect(
+          '''
       SELECT id_user
       FROM users
       WHERE email = ?
       LIMIT 1
       ''',
-      variables: [Variable.withString(normalizedEmail)],
-      readsFrom: {_database.users},
-    ).getSingleOrNull();
+          variables: [Variable.withString(normalizedEmail)],
+          readsFrom: {_database.users},
+        )
+        .getSingleOrNull();
 
     return row?.read<String>('id_user');
+  }
+
+  Future<String> _resolvePayrollPolicyId({
+    required String organizationId,
+    required String payFrequency,
+  }) async {
+    final normalizedFrequency = payFrequency.trim().toLowerCase();
+
+    final existing =
+        await (_database.select(_database.payrollPolicies)..where(
+              (tbl) =>
+                  tbl.organizationId.equals(organizationId) &
+                  tbl.payFrequency.equals(normalizedFrequency),
+            ))
+            .getSingleOrNull();
+
+    if (existing != null) {
+      return existing.idPolicy;
+    }
+
+    final policyId = UuidHelper.generate();
+    await _database
+        .into(_database.payrollPolicies)
+        .insert(
+          PayrollPoliciesCompanion(
+            idPolicy: Value(policyId),
+            organizationId: Value(organizationId),
+            name: Value(
+              normalizedFrequency == 'biweekly'
+                  ? 'Nomina quincenal'
+                  : 'Nomina semanal',
+            ),
+            payFrequency: Value(normalizedFrequency),
+            currency: const Value('MXN'),
+            isDefault: const Value(false),
+          ),
+        );
+
+    return policyId;
   }
 
   String _normalizeRoleCode(String roleName) {

@@ -5,10 +5,7 @@ import 'package:mobile_orvexis/feature/employees/presentation/providers/create_e
 import 'package:mobile_orvexis/feature/employees/presentation/widgets/create_employee_screen/create_employee_form.dart';
 
 class CreateEmployeeScreen extends StatefulWidget {
-  const CreateEmployeeScreen({
-    super.key,
-    required this.controller,
-  });
+  const CreateEmployeeScreen({super.key, required this.controller});
 
   final CreateEmployeeController controller;
 
@@ -76,7 +73,9 @@ class _CreateEmployeeScreenState extends State<CreateEmployeeScreen> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
       );
     }
   }
@@ -89,9 +88,8 @@ class _CreateEmployeeScreenState extends State<CreateEmployeeScreen> {
     if (!mounted) return;
 
     setState(() {
-      _selectedRoleName = widget.controller.availableRoleNames.contains(
-            createdRoleName,
-          )
+      _selectedRoleName =
+          widget.controller.availableRoleNames.contains(createdRoleName)
           ? createdRoleName
           : _selectedRoleName;
     });

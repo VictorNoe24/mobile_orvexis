@@ -4,10 +4,7 @@ import 'package:mobile_orvexis/feature/roles/presentation/providers/roles_contro
 import 'package:mobile_orvexis/feature/roles/presentation/widgets/roles_screen/role_list_tile.dart';
 
 class RolesScreen extends StatefulWidget {
-  const RolesScreen({
-    super.key,
-    required this.controller,
-  });
+  const RolesScreen({super.key, required this.controller});
 
   final RolesController controller;
 
@@ -87,7 +84,9 @@ class _RolesScreenState extends State<RolesScreen> {
                     final role = widget.controller.roles[index];
                     return RoleListTile(
                       role: role,
-                      onTap: role.isSystem ? null : () => _openEditRole(role.id),
+                      onTap: role.isSystem
+                          ? null
+                          : () => _openEditRole(role.id),
                     );
                   },
                   separatorBuilder: (_, _) => const SizedBox(height: 8),

@@ -3749,6 +3749,17 @@ class $WorkUnitsTable extends WorkUnits
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _imagePathMeta = const VerificationMeta(
+    'imagePath',
+  );
+  @override
+  late final GeneratedColumn<String> imagePath = GeneratedColumn<String>(
+    'image_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _startDateMeta = const VerificationMeta(
     'startDate',
   );
@@ -3816,6 +3827,7 @@ class $WorkUnitsTable extends WorkUnits
     code,
     name,
     location,
+    imagePath,
     startDate,
     endDate,
     statusId,
@@ -3872,6 +3884,12 @@ class $WorkUnitsTable extends WorkUnits
       context.handle(
         _locationMeta,
         location.isAcceptableOrUnknown(data['location']!, _locationMeta),
+      );
+    }
+    if (data.containsKey('image_path')) {
+      context.handle(
+        _imagePathMeta,
+        imagePath.isAcceptableOrUnknown(data['image_path']!, _imagePathMeta),
       );
     }
     if (data.containsKey('start_date')) {
@@ -3935,6 +3953,10 @@ class $WorkUnitsTable extends WorkUnits
         DriftSqlType.string,
         data['${effectivePrefix}location'],
       ),
+      imagePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}image_path'],
+      ),
       startDate: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}start_date'],
@@ -3970,6 +3992,7 @@ class WorkUnit extends DataClass implements Insertable<WorkUnit> {
   final String? code;
   final String name;
   final String? location;
+  final String? imagePath;
   final DateTime? startDate;
   final DateTime? endDate;
   final String statusId;
@@ -3981,6 +4004,7 @@ class WorkUnit extends DataClass implements Insertable<WorkUnit> {
     this.code,
     required this.name,
     this.location,
+    this.imagePath,
     this.startDate,
     this.endDate,
     required this.statusId,
@@ -3998,6 +4022,9 @@ class WorkUnit extends DataClass implements Insertable<WorkUnit> {
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || location != null) {
       map['location'] = Variable<String>(location);
+    }
+    if (!nullToAbsent || imagePath != null) {
+      map['image_path'] = Variable<String>(imagePath);
     }
     if (!nullToAbsent || startDate != null) {
       map['start_date'] = Variable<DateTime>(startDate);
@@ -4020,6 +4047,9 @@ class WorkUnit extends DataClass implements Insertable<WorkUnit> {
       location: location == null && nullToAbsent
           ? const Value.absent()
           : Value(location),
+      imagePath: imagePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imagePath),
       startDate: startDate == null && nullToAbsent
           ? const Value.absent()
           : Value(startDate),
@@ -4043,6 +4073,7 @@ class WorkUnit extends DataClass implements Insertable<WorkUnit> {
       code: serializer.fromJson<String?>(json['code']),
       name: serializer.fromJson<String>(json['name']),
       location: serializer.fromJson<String?>(json['location']),
+      imagePath: serializer.fromJson<String?>(json['imagePath']),
       startDate: serializer.fromJson<DateTime?>(json['startDate']),
       endDate: serializer.fromJson<DateTime?>(json['endDate']),
       statusId: serializer.fromJson<String>(json['statusId']),
@@ -4059,6 +4090,7 @@ class WorkUnit extends DataClass implements Insertable<WorkUnit> {
       'code': serializer.toJson<String?>(code),
       'name': serializer.toJson<String>(name),
       'location': serializer.toJson<String?>(location),
+      'imagePath': serializer.toJson<String?>(imagePath),
       'startDate': serializer.toJson<DateTime?>(startDate),
       'endDate': serializer.toJson<DateTime?>(endDate),
       'statusId': serializer.toJson<String>(statusId),
@@ -4073,6 +4105,7 @@ class WorkUnit extends DataClass implements Insertable<WorkUnit> {
     Value<String?> code = const Value.absent(),
     String? name,
     Value<String?> location = const Value.absent(),
+    Value<String?> imagePath = const Value.absent(),
     Value<DateTime?> startDate = const Value.absent(),
     Value<DateTime?> endDate = const Value.absent(),
     String? statusId,
@@ -4084,6 +4117,7 @@ class WorkUnit extends DataClass implements Insertable<WorkUnit> {
     code: code.present ? code.value : this.code,
     name: name ?? this.name,
     location: location.present ? location.value : this.location,
+    imagePath: imagePath.present ? imagePath.value : this.imagePath,
     startDate: startDate.present ? startDate.value : this.startDate,
     endDate: endDate.present ? endDate.value : this.endDate,
     statusId: statusId ?? this.statusId,
@@ -4101,6 +4135,7 @@ class WorkUnit extends DataClass implements Insertable<WorkUnit> {
       code: data.code.present ? data.code.value : this.code,
       name: data.name.present ? data.name.value : this.name,
       location: data.location.present ? data.location.value : this.location,
+      imagePath: data.imagePath.present ? data.imagePath.value : this.imagePath,
       startDate: data.startDate.present ? data.startDate.value : this.startDate,
       endDate: data.endDate.present ? data.endDate.value : this.endDate,
       statusId: data.statusId.present ? data.statusId.value : this.statusId,
@@ -4117,6 +4152,7 @@ class WorkUnit extends DataClass implements Insertable<WorkUnit> {
           ..write('code: $code, ')
           ..write('name: $name, ')
           ..write('location: $location, ')
+          ..write('imagePath: $imagePath, ')
           ..write('startDate: $startDate, ')
           ..write('endDate: $endDate, ')
           ..write('statusId: $statusId, ')
@@ -4133,6 +4169,7 @@ class WorkUnit extends DataClass implements Insertable<WorkUnit> {
     code,
     name,
     location,
+    imagePath,
     startDate,
     endDate,
     statusId,
@@ -4148,6 +4185,7 @@ class WorkUnit extends DataClass implements Insertable<WorkUnit> {
           other.code == this.code &&
           other.name == this.name &&
           other.location == this.location &&
+          other.imagePath == this.imagePath &&
           other.startDate == this.startDate &&
           other.endDate == this.endDate &&
           other.statusId == this.statusId &&
@@ -4161,6 +4199,7 @@ class WorkUnitsCompanion extends UpdateCompanion<WorkUnit> {
   final Value<String?> code;
   final Value<String> name;
   final Value<String?> location;
+  final Value<String?> imagePath;
   final Value<DateTime?> startDate;
   final Value<DateTime?> endDate;
   final Value<String> statusId;
@@ -4173,6 +4212,7 @@ class WorkUnitsCompanion extends UpdateCompanion<WorkUnit> {
     this.code = const Value.absent(),
     this.name = const Value.absent(),
     this.location = const Value.absent(),
+    this.imagePath = const Value.absent(),
     this.startDate = const Value.absent(),
     this.endDate = const Value.absent(),
     this.statusId = const Value.absent(),
@@ -4186,6 +4226,7 @@ class WorkUnitsCompanion extends UpdateCompanion<WorkUnit> {
     this.code = const Value.absent(),
     required String name,
     this.location = const Value.absent(),
+    this.imagePath = const Value.absent(),
     this.startDate = const Value.absent(),
     this.endDate = const Value.absent(),
     required String statusId,
@@ -4201,6 +4242,7 @@ class WorkUnitsCompanion extends UpdateCompanion<WorkUnit> {
     Expression<String>? code,
     Expression<String>? name,
     Expression<String>? location,
+    Expression<String>? imagePath,
     Expression<DateTime>? startDate,
     Expression<DateTime>? endDate,
     Expression<String>? statusId,
@@ -4214,6 +4256,7 @@ class WorkUnitsCompanion extends UpdateCompanion<WorkUnit> {
       if (code != null) 'code': code,
       if (name != null) 'name': name,
       if (location != null) 'location': location,
+      if (imagePath != null) 'image_path': imagePath,
       if (startDate != null) 'start_date': startDate,
       if (endDate != null) 'end_date': endDate,
       if (statusId != null) 'status_id': statusId,
@@ -4229,6 +4272,7 @@ class WorkUnitsCompanion extends UpdateCompanion<WorkUnit> {
     Value<String?>? code,
     Value<String>? name,
     Value<String?>? location,
+    Value<String?>? imagePath,
     Value<DateTime?>? startDate,
     Value<DateTime?>? endDate,
     Value<String>? statusId,
@@ -4242,6 +4286,7 @@ class WorkUnitsCompanion extends UpdateCompanion<WorkUnit> {
       code: code ?? this.code,
       name: name ?? this.name,
       location: location ?? this.location,
+      imagePath: imagePath ?? this.imagePath,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       statusId: statusId ?? this.statusId,
@@ -4268,6 +4313,9 @@ class WorkUnitsCompanion extends UpdateCompanion<WorkUnit> {
     }
     if (location.present) {
       map['location'] = Variable<String>(location.value);
+    }
+    if (imagePath.present) {
+      map['image_path'] = Variable<String>(imagePath.value);
     }
     if (startDate.present) {
       map['start_date'] = Variable<DateTime>(startDate.value);
@@ -4298,6 +4346,7 @@ class WorkUnitsCompanion extends UpdateCompanion<WorkUnit> {
           ..write('code: $code, ')
           ..write('name: $name, ')
           ..write('location: $location, ')
+          ..write('imagePath: $imagePath, ')
           ..write('startDate: $startDate, ')
           ..write('endDate: $endDate, ')
           ..write('statusId: $statusId, ')
@@ -19883,6 +19932,7 @@ typedef $$WorkUnitsTableCreateCompanionBuilder =
       Value<String?> code,
       required String name,
       Value<String?> location,
+      Value<String?> imagePath,
       Value<DateTime?> startDate,
       Value<DateTime?> endDate,
       required String statusId,
@@ -19897,6 +19947,7 @@ typedef $$WorkUnitsTableUpdateCompanionBuilder =
       Value<String?> code,
       Value<String> name,
       Value<String?> location,
+      Value<String?> imagePath,
       Value<DateTime?> startDate,
       Value<DateTime?> endDate,
       Value<String> statusId,
@@ -20130,6 +20181,11 @@ class $$WorkUnitsTableFilterComposer
 
   ColumnFilters<String> get location => $composableBuilder(
     column: $table.location,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imagePath => $composableBuilder(
+    column: $table.imagePath,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -20379,6 +20435,11 @@ class $$WorkUnitsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get imagePath => $composableBuilder(
+    column: $table.imagePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get startDate => $composableBuilder(
     column: $table.startDate,
     builder: (column) => ColumnOrderings(column),
@@ -20468,6 +20529,9 @@ class $$WorkUnitsTableAnnotationComposer
 
   GeneratedColumn<String> get location =>
       $composableBuilder(column: $table.location, builder: (column) => column);
+
+  GeneratedColumn<String> get imagePath =>
+      $composableBuilder(column: $table.imagePath, builder: (column) => column);
 
   GeneratedColumn<DateTime> get startDate =>
       $composableBuilder(column: $table.startDate, builder: (column) => column);
@@ -20721,6 +20785,7 @@ class $$WorkUnitsTableTableManager
                 Value<String?> code = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String?> location = const Value.absent(),
+                Value<String?> imagePath = const Value.absent(),
                 Value<DateTime?> startDate = const Value.absent(),
                 Value<DateTime?> endDate = const Value.absent(),
                 Value<String> statusId = const Value.absent(),
@@ -20733,6 +20798,7 @@ class $$WorkUnitsTableTableManager
                 code: code,
                 name: name,
                 location: location,
+                imagePath: imagePath,
                 startDate: startDate,
                 endDate: endDate,
                 statusId: statusId,
@@ -20747,6 +20813,7 @@ class $$WorkUnitsTableTableManager
                 Value<String?> code = const Value.absent(),
                 required String name,
                 Value<String?> location = const Value.absent(),
+                Value<String?> imagePath = const Value.absent(),
                 Value<DateTime?> startDate = const Value.absent(),
                 Value<DateTime?> endDate = const Value.absent(),
                 required String statusId,
@@ -20759,6 +20826,7 @@ class $$WorkUnitsTableTableManager
                 code: code,
                 name: name,
                 location: location,
+                imagePath: imagePath,
                 startDate: startDate,
                 endDate: endDate,
                 statusId: statusId,

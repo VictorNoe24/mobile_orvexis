@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_orvexis/feature/auth/domain/entities/auth_session.dart';
 
 class HomeDashboardTab extends StatelessWidget {
-  const HomeDashboardTab({
-    super.key,
-    required this.session,
-  });
+  const HomeDashboardTab({super.key, required this.session});
 
   final AuthSession session;
 
@@ -141,11 +138,7 @@ class _HomeHeaderCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: colors.outlineVariant),
           ),
-          child: Icon(
-            Icons.business_rounded,
-            color: colors.primary,
-            size: 28,
-          ),
+          child: Icon(Icons.business_rounded, color: colors.primary, size: 28),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -225,7 +218,10 @@ class _MetricSummaryCard extends StatelessWidget {
               Icon(icon, size: 22, color: colors.onSurface),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: badgeColor ?? colors.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(10),
@@ -347,10 +343,7 @@ class _PayrollStatusCard extends StatelessWidget {
 }
 
 class _QuickActionItem extends StatelessWidget {
-  const _QuickActionItem({
-    required this.icon,
-    required this.label,
-  });
+  const _QuickActionItem({required this.icon, required this.label});
 
   final IconData icon;
   final String label;
@@ -369,9 +362,7 @@ class _QuickActionItem extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: colors.outlineVariant),
           ),
-          child: Center(
-            child: Icon(icon, color: colors.onSurface, size: 22),
-          ),
+          child: Center(child: Icon(icon, color: colors.onSurface, size: 22)),
         ),
         const SizedBox(height: 8),
         Text(
@@ -388,10 +379,7 @@ class _QuickActionItem extends StatelessWidget {
 }
 
 class _AlertActivityCard extends StatelessWidget {
-  const _AlertActivityCard({
-    required this.title,
-    required this.description,
-  });
+  const _AlertActivityCard({required this.title, required this.description});
 
   final String title;
   final String description;

@@ -10,9 +10,6 @@ class CreateRoleUseCase {
     required String organizationId,
     required CreateRoleInput input,
   }) {
-    return _repository.createRole(
-      organizationId: organizationId,
-      input: input,
-    );
+    return _repository.createRole(organizationId: organizationId, input: input);
   }
 }

@@ -1,7 +1,5 @@
 class CreateRoleInput {
-  const CreateRoleInput({
-    required this.name,
-  });
+  const CreateRoleInput({required this.name});
 
   final String name;
 }

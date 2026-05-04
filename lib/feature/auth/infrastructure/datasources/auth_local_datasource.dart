@@ -52,24 +52,28 @@ class AuthLocalDataSource {
         ),
       );
 
-      await _database.into(_database.roles).insert(
-        RolesCompanion(
-          idRole: Value(roleId),
-          organizationId: Value(organizationId),
-          code: const Value('admin'),
-          name: const Value('Administrador'),
-          isSystem: const Value(true),
-        ),
-      );
+      await _database
+          .into(_database.roles)
+          .insert(
+            RolesCompanion(
+              idRole: Value(roleId),
+              organizationId: Value(organizationId),
+              code: const Value('admin'),
+              name: const Value('Administrador'),
+              isSystem: const Value(true),
+            ),
+          );
 
-      await _database.into(_database.orgUserRoles).insert(
-        OrgUserRolesCompanion(
-          idOrgUserRole: Value(roleAssignmentId),
-          orgUserId: Value(relationId),
-          roleId: Value(roleId),
-          assignedAt: Value(DateTime.now()),
-        ),
-      );
+      await _database
+          .into(_database.orgUserRoles)
+          .insert(
+            OrgUserRolesCompanion(
+              idOrgUserRole: Value(roleAssignmentId),
+              orgUserId: Value(relationId),
+              roleId: Value(roleId),
+              assignedAt: Value(DateTime.now()),
+            ),
+          );
     });
   }
 

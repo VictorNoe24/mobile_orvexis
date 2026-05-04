@@ -101,7 +101,9 @@ class _EditEmployeeScreenState extends State<EditEmployeeScreen> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
       );
     }
   }
@@ -114,9 +116,8 @@ class _EditEmployeeScreenState extends State<EditEmployeeScreen> {
     if (!mounted) return;
 
     setState(() {
-      _selectedRoleName = widget.controller.availableRoleNames.contains(
-            createdRoleName,
-          )
+      _selectedRoleName =
+          widget.controller.availableRoleNames.contains(createdRoleName)
           ? createdRoleName
           : _selectedRoleName;
     });
@@ -158,7 +159,18 @@ class _EditEmployeeScreenState extends State<EditEmployeeScreen> {
         _seedFormIfNeeded();
 
         return Scaffold(
-          appBar: AppBar(title: const Text('Editar empleado')),
+          appBar: AppBar(
+            title: const Text('Editar empleado'),
+            actions: [
+              IconButton(
+                onPressed: () => context.push(
+                  '/employees/${widget.employeeId}/compensation',
+                ),
+                icon: const Icon(Icons.payments_rounded),
+                tooltip: 'Configurar sueldo',
+              ),
+            ],
+          ),
           body: widget.controller.isLoading
               ? const Center(child: CircularProgressIndicator())
               : widget.controller.loadErrorMessage != null

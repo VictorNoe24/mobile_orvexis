@@ -4,10 +4,7 @@ import 'package:mobile_orvexis/feature/roles/presentation/providers/create_role_
 import 'package:mobile_orvexis/feature/roles/presentation/widgets/create_role_screen/create_role_form.dart';
 
 class CreateRoleScreen extends StatefulWidget {
-  const CreateRoleScreen({
-    super.key,
-    required this.controller,
-  });
+  const CreateRoleScreen({super.key, required this.controller});
 
   final CreateRoleController controller;
 
@@ -49,7 +46,9 @@ class _CreateRoleScreenState extends State<CreateRoleScreen> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
       );
     }
   }

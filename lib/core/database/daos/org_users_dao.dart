@@ -32,8 +32,9 @@ class OrgUsersDao extends DatabaseAccessor<AppDatabase>
   }
 
   Future<OrgUser?> getRelationById(String id) {
-    return (select(orgUsers)..where((tbl) => tbl.idOrgUser.equals(id)))
-        .getSingleOrNull();
+    return (select(
+      orgUsers,
+    )..where((tbl) => tbl.idOrgUser.equals(id))).getSingleOrNull();
   }
 
   Future<int> insertRelation(OrgUsersCompanion entity) {
@@ -44,7 +45,9 @@ class OrgUsersDao extends DatabaseAccessor<AppDatabase>
     return (delete(orgUsers)..where((tbl) => tbl.idOrgUser.equals(id))).go();
   }
 
-  Future<List<OrgUserWithDetails>> getUsersByOrganization(String organizationId) async {
+  Future<List<OrgUserWithDetails>> getUsersByOrganization(
+    String organizationId,
+  ) async {
     final rows = await customSelect(
       '''
       SELECT
@@ -83,15 +86,16 @@ class OrgUsersDao extends DatabaseAccessor<AppDatabase>
     return rows.map(_mapOrgUserWithDetails).toList();
   }
 
-  Stream<List<OrgUserWithDetails>> watchUsersByOrganization(String organizationId) {
+  Stream<List<OrgUserWithDetails>> watchUsersByOrganization(
+    String organizationId,
+  ) {
     final query = select(orgUsers).join([
       innerJoin(users, users.idUser.equalsExp(orgUsers.userId)),
       innerJoin(
         organizations,
         organizations.idOrganization.equalsExp(orgUsers.organizationId),
       ),
-    ])
-      ..where(orgUsers.organizationId.equals(organizationId));
+    ])..where(orgUsers.organizationId.equals(organizationId));
 
     return query.watch().map((rows) {
       return rows.map((row) {

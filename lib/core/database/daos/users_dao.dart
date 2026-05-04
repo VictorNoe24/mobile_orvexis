@@ -17,13 +17,15 @@ class UsersDao extends DatabaseAccessor<AppDatabase> with _$UsersDaoMixin {
   }
 
   Future<User?> getUserById(String id) {
-    return (select(users)..where((tbl) => tbl.idUser.equals(id)))
-        .getSingleOrNull();
+    return (select(
+      users,
+    )..where((tbl) => tbl.idUser.equals(id))).getSingleOrNull();
   }
 
   Future<User?> getUserByEmail(String email) {
-    return (select(users)..where((tbl) => tbl.email.equals(email)))
-        .getSingleOrNull();
+    return (select(
+      users,
+    )..where((tbl) => tbl.email.equals(email))).getSingleOrNull();
   }
 
   Future<int> insertUser(UsersCompanion entity) {

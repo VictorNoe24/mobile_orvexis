@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 
 class EmployeesSearchField extends StatelessWidget {
-  const EmployeesSearchField({
-    super.key,
-    required this.controller,
-  });
+  const EmployeesSearchField({super.key, required this.controller});
 
   final TextEditingController controller;
 

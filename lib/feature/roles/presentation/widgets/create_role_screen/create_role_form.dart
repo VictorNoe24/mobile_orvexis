@@ -99,10 +99,7 @@ class CreateRoleForm extends StatelessWidget {
 }
 
 class _FormFieldBlock extends StatelessWidget {
-  const _FormFieldBlock({
-    required this.label,
-    required this.child,
-  });
+  const _FormFieldBlock({required this.label, required this.child});
 
   final String label;
   final Widget child;

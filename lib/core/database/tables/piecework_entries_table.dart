@@ -7,8 +7,7 @@ import 'work_units_table.dart';
 import 'piecework_catalog_table.dart';
 
 class PieceworkEntries extends Table {
-  TextColumn get idEntry =>
-      text().clientDefault(() => UuidHelper.generate())();
+  TextColumn get idEntry => text().clientDefault(() => UuidHelper.generate())();
   TextColumn get organizationId =>
       text().references(Organizations, #idOrganization)();
   TextColumn get orgUserId => text().references(OrgUsers, #idOrgUser)();

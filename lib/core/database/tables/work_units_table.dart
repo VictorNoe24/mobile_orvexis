@@ -12,6 +12,7 @@ class WorkUnits extends Table {
   TextColumn get code => text().nullable()();
   TextColumn get name => text()();
   TextColumn get location => text().nullable()();
+  TextColumn get imagePath => text().nullable()();
   DateTimeColumn get startDate => dateTime().nullable()();
   DateTimeColumn get endDate => dateTime().nullable()();
   TextColumn get statusId => text().references(Statuses, #idStatus)();

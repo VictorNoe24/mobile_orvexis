@@ -40,9 +40,7 @@ class AppErrorHandler {
 
       if (!kDebugMode) {
         return const Material(
-          child: Center(
-            child: Text('Something went wrong'),
-          ),
+          child: Center(child: Text('Something went wrong')),
         );
       }
 

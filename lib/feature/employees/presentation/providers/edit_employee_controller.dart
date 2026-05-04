@@ -47,7 +47,8 @@ class EditEmployeeController extends ChangeNotifier {
       formData = employeeData;
       availableRoleNames = roleNames;
       if (!availableRoleNames.contains(employeeData.roleName)) {
-        availableRoleNames = [...availableRoleNames, employeeData.roleName]..sort();
+        availableRoleNames = [...availableRoleNames, employeeData.roleName]
+          ..sort();
       }
     } catch (error) {
       loadErrorMessage = error.toString().replaceFirst('Exception: ', '');

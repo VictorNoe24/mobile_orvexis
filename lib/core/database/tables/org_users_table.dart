@@ -11,8 +11,7 @@ class OrgUsers extends Table {
   TextColumn get organizationId =>
       text().references(Organizations, #idOrganization)();
 
-  TextColumn get userId =>
-      text().references(Users, #idUser)();
+  TextColumn get userId => text().references(Users, #idUser)();
 
   DateTimeColumn get joinedAt => dateTime().nullable()();
   DateTimeColumn get createdAt =>

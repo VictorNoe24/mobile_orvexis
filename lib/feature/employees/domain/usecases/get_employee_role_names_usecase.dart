@@ -5,9 +5,7 @@ class GetEmployeeRoleNamesUseCase {
 
   final EmployeesRepository _repository;
 
-  Future<List<String>> call({
-    required String organizationId,
-  }) {
+  Future<List<String>> call({required String organizationId}) {
     return _repository.getRoleNames(organizationId: organizationId);
   }
 }

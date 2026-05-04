@@ -41,7 +41,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
       );
     }
   }
@@ -79,7 +81,10 @@ class _LoginScreenState extends State<LoginScreen> {
           body: SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 24,
+                ),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 420),
                   child: Form(
@@ -152,7 +157,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           decoration: InputDecoration(
                             hintText: 'Ingresa tu contrasena',
                             suffixIcon: IconButton(
-                              onPressed: widget.controller.togglePasswordVisibility,
+                              onPressed:
+                                  widget.controller.togglePasswordVisibility,
                               icon: Icon(
                                 widget.controller.obscurePassword
                                     ? Icons.visibility_outlined
@@ -171,8 +177,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 18),
                         ElevatedButton(
-                          onPressed:
-                              widget.controller.isLoading ? null : _handleLogin,
+                          onPressed: widget.controller.isLoading
+                              ? null
+                              : _handleLogin,
                           child: Text(
                             widget.controller.isLoading
                                 ? 'Iniciando...'
@@ -182,7 +189,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 16),
                         Center(
                           child: TextButton(
-                            onPressed: () => context.push('/register-organization'),
+                            onPressed: () =>
+                                context.push('/register-organization'),
                             child: const Text(
                               '¿Nuevo en la plataforma? Crea una cuenta',
                             ),

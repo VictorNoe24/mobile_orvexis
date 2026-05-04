@@ -11,16 +11,15 @@ class RolesLocalDataSource {
 
   final AppDatabase _database;
 
-  Future<List<RoleItem>> getRoles({
-    required String organizationId,
-  }) async {
-    final rows = await (_database.select(_database.roles)
-          ..where((tbl) => tbl.organizationId.equals(organizationId))
-          ..orderBy([
-            (tbl) => OrderingTerm.asc(tbl.isSystem),
-            (tbl) => OrderingTerm.asc(tbl.name),
-          ]))
-        .get();
+  Future<List<RoleItem>> getRoles({required String organizationId}) async {
+    final rows =
+        await (_database.select(_database.roles)
+              ..where((tbl) => tbl.organizationId.equals(organizationId))
+              ..orderBy([
+                (tbl) => OrderingTerm.asc(tbl.isSystem),
+                (tbl) => OrderingTerm.asc(tbl.name),
+              ]))
+            .get();
 
     return rows
         .map(
@@ -39,13 +38,13 @@ class RolesLocalDataSource {
     required String organizationId,
     required String roleId,
   }) async {
-    final role = await (_database.select(_database.roles)
-          ..where(
-            (tbl) =>
-                tbl.organizationId.equals(organizationId) &
-                tbl.idRole.equals(roleId),
-          ))
-        .getSingleOrNull();
+    final role =
+        await (_database.select(_database.roles)..where(
+              (tbl) =>
+                  tbl.organizationId.equals(organizationId) &
+                  tbl.idRole.equals(roleId),
+            ))
+            .getSingleOrNull();
 
     if (role == null) {
       throw Exception('No se encontro el rol solicitado.');
@@ -72,15 +71,17 @@ class RolesLocalDataSource {
     );
 
     final roleId = UuidHelper.generate();
-    await _database.into(_database.roles).insert(
-      RolesCompanion(
-        idRole: Value(roleId),
-        organizationId: Value(organizationId),
-        code: Value(normalizedCode),
-        name: Value(normalizedName),
-        isSystem: const Value(false),
-      ),
-    );
+    await _database
+        .into(_database.roles)
+        .insert(
+          RolesCompanion(
+            idRole: Value(roleId),
+            organizationId: Value(organizationId),
+            code: Value(normalizedCode),
+            name: Value(normalizedName),
+            isSystem: const Value(false),
+          ),
+        );
 
     return normalizedName;
   }
@@ -90,13 +91,13 @@ class RolesLocalDataSource {
     required String roleId,
     required CreateRoleInput input,
   }) async {
-    final currentRole = await (_database.select(_database.roles)
-          ..where(
-            (tbl) =>
-                tbl.organizationId.equals(organizationId) &
-                tbl.idRole.equals(roleId),
-          ))
-        .getSingleOrNull();
+    final currentRole =
+        await (_database.select(_database.roles)..where(
+              (tbl) =>
+                  tbl.organizationId.equals(organizationId) &
+                  tbl.idRole.equals(roleId),
+            ))
+            .getSingleOrNull();
 
     if (currentRole == null) {
       throw Exception('No se encontro el rol solicitado.');
@@ -115,14 +116,11 @@ class RolesLocalDataSource {
       excludingRoleId: roleId,
     );
 
-    await (_database.update(_database.roles)
-          ..where((tbl) => tbl.idRole.equals(roleId)))
-        .write(
-          RolesCompanion(
-            name: Value(normalizedName),
-            code: Value(normalizedCode),
-          ),
-        );
+    await (_database.update(
+      _database.roles,
+    )..where((tbl) => tbl.idRole.equals(roleId))).write(
+      RolesCompanion(name: Value(normalizedName), code: Value(normalizedCode)),
+    );
 
     return normalizedName;
   }
@@ -141,18 +139,19 @@ class RolesLocalDataSource {
     required String normalizedCode,
     String? excludingRoleId,
   }) async {
-    final roles = await (_database.select(_database.roles)
-          ..where(
-            (tbl) =>
-                tbl.organizationId.equals(organizationId) &
-                tbl.globalStatusId.equals(GlobalStatusDefaults.activeId),
-          ))
-        .get();
+    final roles =
+        await (_database.select(_database.roles)..where(
+              (tbl) =>
+                  tbl.organizationId.equals(organizationId) &
+                  tbl.globalStatusId.equals(GlobalStatusDefaults.activeId),
+            ))
+            .get();
 
     final normalizedNameLower = normalizedName.toLowerCase();
     for (final role in roles) {
       if (excludingRoleId != null && role.idRole == excludingRoleId) continue;
-      if (role.code == normalizedCode || role.name.trim().toLowerCase() == normalizedNameLower) {
+      if (role.code == normalizedCode ||
+          role.name.trim().toLowerCase() == normalizedNameLower) {
         throw Exception('Ya existe un rol con ese nombre en la organizacion.');
       }
     }

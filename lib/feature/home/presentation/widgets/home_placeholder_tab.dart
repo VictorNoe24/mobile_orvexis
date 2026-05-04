@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 
 class HomePlaceholderTab extends StatelessWidget {
-  const HomePlaceholderTab({
-    super.key,
-    required this.title,
-  });
+  const HomePlaceholderTab({super.key, required this.title});
 
   final String title;
 

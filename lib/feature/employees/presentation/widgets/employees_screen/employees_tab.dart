@@ -8,10 +8,7 @@ import 'package:mobile_orvexis/feature/employees/presentation/widgets/employees_
 import 'package:mobile_orvexis/feature/employees/presentation/widgets/employees_screen/employees_search_field.dart';
 
 class EmployeesTab extends StatelessWidget {
-  const EmployeesTab({
-    super.key,
-    required this.controller,
-  });
+  const EmployeesTab({super.key, required this.controller});
 
   final EmployeesController controller;
 

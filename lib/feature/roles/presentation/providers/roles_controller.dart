@@ -4,10 +4,7 @@ import 'package:mobile_orvexis/feature/roles/domain/entities/role_item.dart';
 import 'package:mobile_orvexis/feature/roles/domain/usecases/get_roles_usecase.dart';
 
 class RolesController extends ChangeNotifier {
-  RolesController(
-    this._getCurrentSessionUseCase,
-    this._getRolesUseCase,
-  );
+  RolesController(this._getCurrentSessionUseCase, this._getRolesUseCase);
 
   final GetCurrentSessionUseCase _getCurrentSessionUseCase;
   final GetRolesUseCase _getRolesUseCase;

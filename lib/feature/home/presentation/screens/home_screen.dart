@@ -9,6 +9,8 @@ import 'package:mobile_orvexis/feature/home/presentation/widgets/home_dashboard_
 import 'package:mobile_orvexis/feature/home/presentation/widgets/home_placeholder_tab.dart';
 import 'package:mobile_orvexis/feature/home/presentation/widgets/home_settings_tab.dart';
 import 'package:mobile_orvexis/feature/employees/infrastructure/datasources/employees_local_datasource.dart';
+import 'package:mobile_orvexis/feature/projects/domain/usecases/get_projects_usecase.dart';
+import 'package:mobile_orvexis/feature/projects/presentation/screens/projects_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -17,12 +19,14 @@ class HomeScreen extends StatefulWidget {
     required this.getCurrentSessionUseCase,
     required this.logoutUseCase,
     required this.employeesLocalDataSource,
+    required this.getProjectsUseCase,
   });
 
   final ThemeController themeController;
   final GetCurrentSessionUseCase getCurrentSessionUseCase;
   final LogoutUseCase logoutUseCase;
   final EmployeesLocalDataSource employeesLocalDataSource;
+  final GetProjectsUseCase getProjectsUseCase;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -30,6 +34,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  int _projectsRefreshToken = 0;
 
   Future<void> _handleManageRoles() async {
     await context.push('/roles');
@@ -39,6 +44,16 @@ class _HomeScreenState extends State<HomeScreen> {
     await widget.logoutUseCase();
     if (!mounted) return;
     context.go('/start');
+  }
+
+  Future<void> _handleCreateProject() async {
+    final didCreate = await context.push<bool>('/projects/create');
+    if (!mounted || didCreate != true) return;
+
+    setState(() {
+      _projectsRefreshToken++;
+      _selectedIndex = 2;
+    });
   }
 
   @override
@@ -100,7 +115,10 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         },
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_rounded), label: 'Inicio'),
+          NavigationDestination(
+            icon: Icon(Icons.home_rounded),
+            label: 'Inicio',
+          ),
           NavigationDestination(
             icon: Icon(Icons.groups_rounded),
             label: 'Empleados',
@@ -119,12 +137,17 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      floatingActionButton: _selectedIndex == 1
-          ? FloatingActionButton(
-              onPressed: () => context.push('/employees/create'),
-              child: const Icon(Icons.add_rounded),
-            )
-          : null,
+      floatingActionButton: switch (_selectedIndex) {
+        1 => FloatingActionButton(
+          onPressed: () => context.push('/employees/create'),
+          child: const Icon(Icons.add_rounded),
+        ),
+        2 => FloatingActionButton(
+          onPressed: _handleCreateProject,
+          child: const Icon(Icons.add_rounded),
+        ),
+        _ => null,
+      },
     );
   }
 
@@ -136,6 +159,12 @@ class _HomeScreenState extends State<HomeScreen> {
         return EmployeesScreen(
           getCurrentSessionUseCase: widget.getCurrentSessionUseCase,
           employeesLocalDataSource: widget.employeesLocalDataSource,
+        );
+      case 2:
+        return ProjectsScreen(
+          getCurrentSessionUseCase: widget.getCurrentSessionUseCase,
+          getProjectsUseCase: widget.getProjectsUseCase,
+          refreshToken: _projectsRefreshToken,
         );
       case 4:
         return HomeSettingsTab(

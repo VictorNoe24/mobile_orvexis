@@ -79,9 +79,7 @@ class CreateEmployeeForm extends StatelessWidget {
             child: TextFormField(
               controller: nameController,
               validator: (value) => requiredValidator(value, 'el nombre'),
-              decoration: const InputDecoration(
-                hintText: 'Ingresa el nombre',
-              ),
+              decoration: const InputDecoration(hintText: 'Ingresa el nombre'),
             ),
           ),
           _FormFieldBlock(
@@ -121,9 +119,7 @@ class CreateEmployeeForm extends StatelessWidget {
               controller: phoneController,
               keyboardType: TextInputType.phone,
               validator: (value) => requiredValidator(value, 'el telefono'),
-              decoration: const InputDecoration(
-                hintText: '(777)0000000',
-              ),
+              decoration: const InputDecoration(hintText: '(777)0000000'),
             ),
           ),
           _FormFieldBlock(
@@ -141,8 +137,9 @@ class CreateEmployeeForm extends StatelessWidget {
                         ),
                       )
                       .toList(),
-                  onChanged:
-                      isSaving || availableRoleNames.isEmpty ? null : onRoleChanged,
+                  onChanged: isSaving || availableRoleNames.isEmpty
+                      ? null
+                      : onRoleChanged,
                   validator: (value) => requiredValidator(value, 'el puesto'),
                   decoration: InputDecoration(
                     hintText: availableRoleNames.isEmpty
@@ -212,10 +209,7 @@ class CreateEmployeeForm extends StatelessWidget {
 }
 
 class _FormFieldBlock extends StatelessWidget {
-  const _FormFieldBlock({
-    required this.label,
-    required this.child,
-  });
+  const _FormFieldBlock({required this.label, required this.child});
 
   final String label;
   final Widget child;

@@ -3,9 +3,7 @@ import 'package:mobile_orvexis/feature/roles/domain/entities/role_form_data.dart
 import 'package:mobile_orvexis/feature/roles/domain/entities/role_item.dart';
 
 abstract class RolesRepository {
-  Future<List<RoleItem>> getRoles({
-    required String organizationId,
-  });
+  Future<List<RoleItem>> getRoles({required String organizationId});
 
   Future<RoleFormData> getRoleById({
     required String organizationId,

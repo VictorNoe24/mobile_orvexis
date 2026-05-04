@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mobile_orvexis/config/theme/theme_mode_storage.dart';
 
 class ThemeController extends ChangeNotifier {
-  ThemeController({ThemeModeStorage? storage}) : _storage = storage ?? const ThemeModeStorage();
+  ThemeController({ThemeModeStorage? storage})
+    : _storage = storage ?? const ThemeModeStorage();
 
   final ThemeModeStorage _storage;
   ThemeMode _themeMode = ThemeMode.system;

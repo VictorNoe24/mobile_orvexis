@@ -14,10 +14,7 @@ class PasswordHasher {
     return hash.toRadixString(16).padLeft(8, '0');
   }
 
-  static bool matches({
-    required String rawValue,
-    required String hashedValue,
-  }) {
+  static bool matches({required String rawValue, required String hashedValue}) {
     return hash(rawValue) == hashedValue;
   }
 }

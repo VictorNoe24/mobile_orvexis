@@ -2,11 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_orvexis/feature/roles/domain/entities/role_item.dart';
 
 class RoleListTile extends StatelessWidget {
-  const RoleListTile({
-    super.key,
-    required this.role,
-    required this.onTap,
-  });
+  const RoleListTile({super.key, required this.role, required this.onTap});
 
   final RoleItem role;
   final VoidCallback? onTap;
@@ -22,7 +18,9 @@ class RoleListTile extends StatelessWidget {
         leading: CircleAvatar(
           backgroundColor: colors.primary.withValues(alpha: 0.14),
           child: Icon(
-            role.isSystem ? Icons.admin_panel_settings_rounded : Icons.badge_rounded,
+            role.isSystem
+                ? Icons.admin_panel_settings_rounded
+                : Icons.badge_rounded,
             color: colors.primary,
           ),
         ),
@@ -35,7 +33,10 @@ class RoleListTile extends StatelessWidget {
         subtitle: Text('Codigo: ${role.code}'),
         trailing: role.isSystem
             ? Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: colors.secondaryContainer,
                   borderRadius: BorderRadius.circular(999),
