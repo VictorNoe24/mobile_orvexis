@@ -36,6 +36,21 @@ class _EditEmployeeScreenState extends State<EditEmployeeScreen> {
   }
 
   @override
+  void didUpdateWidget(covariant EditEmployeeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final didChangeController = oldWidget.controller != widget.controller;
+    final didChangeEmployee = oldWidget.employeeId != widget.employeeId;
+    if (!didChangeController && !didChangeEmployee) return;
+
+    if (didChangeController) {
+      oldWidget.controller.dispose();
+    }
+
+    _didSeedForm = false;
+    widget.controller.initialize(widget.employeeId);
+  }
+
+  @override
   void dispose() {
     widget.controller.dispose();
     _nameController.dispose();

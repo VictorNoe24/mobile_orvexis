@@ -33,6 +33,14 @@ class _CreateEmployeeScreenState extends State<CreateEmployeeScreen> {
   }
 
   @override
+  void didUpdateWidget(covariant CreateEmployeeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller == widget.controller) return;
+    oldWidget.controller.dispose();
+    widget.controller.initialize();
+  }
+
+  @override
   void dispose() {
     widget.controller.dispose();
     _nameController.dispose();

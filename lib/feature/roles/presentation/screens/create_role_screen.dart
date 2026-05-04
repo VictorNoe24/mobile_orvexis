@@ -20,6 +20,13 @@ class _CreateRoleScreenState extends State<CreateRoleScreen> {
   final _nameController = TextEditingController();
 
   @override
+  void didUpdateWidget(covariant CreateRoleScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller == widget.controller) return;
+    oldWidget.controller.dispose();
+  }
+
+  @override
   void dispose() {
     widget.controller.dispose();
     _nameController.dispose();

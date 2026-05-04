@@ -23,6 +23,14 @@ class _RolesScreenState extends State<RolesScreen> {
   }
 
   @override
+  void didUpdateWidget(covariant RolesScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller == widget.controller) return;
+    oldWidget.controller.dispose();
+    widget.controller.load();
+  }
+
+  @override
   void dispose() {
     widget.controller.dispose();
     super.dispose();

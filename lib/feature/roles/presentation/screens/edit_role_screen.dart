@@ -29,6 +29,21 @@ class _EditRoleScreenState extends State<EditRoleScreen> {
   }
 
   @override
+  void didUpdateWidget(covariant EditRoleScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final didChangeController = oldWidget.controller != widget.controller;
+    final didChangeRole = oldWidget.roleId != widget.roleId;
+    if (!didChangeController && !didChangeRole) return;
+
+    if (didChangeController) {
+      oldWidget.controller.dispose();
+    }
+
+    _didSeed = false;
+    widget.controller.initialize(widget.roleId);
+  }
+
+  @override
   void dispose() {
     widget.controller.dispose();
     _nameController.dispose();
