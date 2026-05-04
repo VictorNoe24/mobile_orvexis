@@ -35,6 +35,16 @@ import 'package:mobile_orvexis/feature/projects/domain/usecases/get_projects_use
 import 'package:mobile_orvexis/feature/projects/domain/usecases/assign_employees_to_project_usecase.dart';
 import 'package:mobile_orvexis/feature/projects/domain/usecases/remove_employee_from_project_usecase.dart';
 import 'package:mobile_orvexis/feature/projects/domain/usecases/update_project_usecase.dart';
+import 'package:mobile_orvexis/feature/payroll/domain/usecases/get_payroll_overview_usecase.dart';
+import 'package:mobile_orvexis/feature/payroll/domain/usecases/get_payroll_history_usecase.dart';
+import 'package:mobile_orvexis/feature/payroll/domain/usecases/get_payroll_payment_preview_usecase.dart';
+import 'package:mobile_orvexis/feature/payroll/domain/usecases/process_payroll_payment_usecase.dart';
+import 'package:mobile_orvexis/feature/payroll/infrastructure/datasources/payroll_local_datasource.dart';
+import 'package:mobile_orvexis/feature/payroll/infrastructure/repositories/payroll_repository_impl.dart';
+import 'package:mobile_orvexis/feature/payroll/presentation/providers/payroll_history_controller.dart';
+import 'package:mobile_orvexis/feature/payroll/presentation/providers/payroll_payment_controller.dart';
+import 'package:mobile_orvexis/feature/payroll/presentation/screens/payroll_history_screen.dart';
+import 'package:mobile_orvexis/feature/payroll/presentation/screens/payroll_payment_screen.dart';
 import 'package:mobile_orvexis/feature/projects/infrastructure/datasources/projects_local_datasource.dart';
 import 'package:mobile_orvexis/feature/projects/infrastructure/repositories/projects_repository_impl.dart';
 import 'package:mobile_orvexis/feature/projects/presentation/providers/assign_project_employees_controller.dart';
@@ -97,6 +107,18 @@ GoRouter appRouter({
   final updateEmployeeCompensationUseCase = UpdateEmployeeCompensationUseCase(
     employeesRepository,
   );
+  final payrollLocalDataSource = PayrollLocalDataSource(database);
+  final payrollRepository = PayrollRepositoryImpl(payrollLocalDataSource);
+  final getPayrollOverviewUseCase = GetPayrollOverviewUseCase(
+    payrollRepository,
+  );
+  final getPayrollPaymentPreviewUseCase = GetPayrollPaymentPreviewUseCase(
+    payrollRepository,
+  );
+  final processPayrollPaymentUseCase = ProcessPayrollPaymentUseCase(
+    payrollRepository,
+  );
+  final getPayrollHistoryUseCase = GetPayrollHistoryUseCase(payrollRepository);
   final projectsLocalDataSource = ProjectsLocalDataSource(database);
   final projectsRepository = ProjectsRepositoryImpl(projectsLocalDataSource);
   final getProjectsUseCase = GetProjectsUseCase(projectsRepository);
@@ -156,6 +178,7 @@ GoRouter appRouter({
           logoutUseCase: logoutUseCase,
           employeesLocalDataSource: employeesLocalDataSource,
           getProjectsUseCase: getProjectsUseCase,
+          getPayrollOverviewUseCase: getPayrollOverviewUseCase,
         ),
       ),
       GoRoute(
@@ -222,6 +245,26 @@ GoRouter appRouter({
             getCurrentSessionUseCase,
             getAssignableProjectEmployeesUseCase,
             assignEmployeesToProjectUseCase,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/payroll/pay/:frequency',
+        builder: (context, state) => PayrollPaymentScreen(
+          payFrequency: state.pathParameters['frequency']!,
+          controller: PayrollPaymentController(
+            getCurrentSessionUseCase,
+            getPayrollPaymentPreviewUseCase,
+            processPayrollPaymentUseCase,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/payroll/history',
+        builder: (context, state) => PayrollHistoryScreen(
+          controller: PayrollHistoryController(
+            getCurrentSessionUseCase,
+            getPayrollHistoryUseCase,
           ),
         ),
       ),

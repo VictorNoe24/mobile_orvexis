@@ -9,6 +9,8 @@ import 'package:mobile_orvexis/feature/home/presentation/widgets/home_dashboard_
 import 'package:mobile_orvexis/feature/home/presentation/widgets/home_placeholder_tab.dart';
 import 'package:mobile_orvexis/feature/home/presentation/widgets/home_settings_tab.dart';
 import 'package:mobile_orvexis/feature/employees/infrastructure/datasources/employees_local_datasource.dart';
+import 'package:mobile_orvexis/feature/payroll/domain/usecases/get_payroll_overview_usecase.dart';
+import 'package:mobile_orvexis/feature/payroll/presentation/screens/payroll_screen.dart';
 import 'package:mobile_orvexis/feature/projects/domain/usecases/get_projects_usecase.dart';
 import 'package:mobile_orvexis/feature/projects/presentation/screens/projects_screen.dart';
 
@@ -20,6 +22,7 @@ class HomeScreen extends StatefulWidget {
     required this.logoutUseCase,
     required this.employeesLocalDataSource,
     required this.getProjectsUseCase,
+    required this.getPayrollOverviewUseCase,
   });
 
   final ThemeController themeController;
@@ -27,6 +30,7 @@ class HomeScreen extends StatefulWidget {
   final LogoutUseCase logoutUseCase;
   final EmployeesLocalDataSource employeesLocalDataSource;
   final GetProjectsUseCase getProjectsUseCase;
+  final GetPayrollOverviewUseCase getPayrollOverviewUseCase;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -171,6 +175,11 @@ class _HomeScreenState extends State<HomeScreen> {
           themeController: widget.themeController,
           onManageRoles: _handleManageRoles,
           onLogout: _handleLogout,
+        );
+      case 3:
+        return PayrollScreen(
+          getCurrentSessionUseCase: widget.getCurrentSessionUseCase,
+          getPayrollOverviewUseCase: widget.getPayrollOverviewUseCase,
         );
       default:
         return HomePlaceholderTab(title: _titles[_selectedIndex]);
