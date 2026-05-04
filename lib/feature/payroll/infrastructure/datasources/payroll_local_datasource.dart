@@ -9,6 +9,8 @@ import 'package:mobile_orvexis/feature/payroll/domain/entities/payroll_pending_e
 import 'package:mobile_orvexis/feature/payroll/domain/entities/payroll_payment_preview.dart';
 import 'package:mobile_orvexis/feature/payroll/domain/entities/payroll_payment_preview_item.dart';
 import 'package:mobile_orvexis/feature/payroll/domain/entities/payroll_policy_summary.dart';
+import 'package:mobile_orvexis/feature/payroll/domain/entities/payroll_report_data.dart';
+import 'package:mobile_orvexis/feature/payroll/domain/entities/payroll_report_item.dart';
 import 'package:mobile_orvexis/feature/payroll/domain/entities/payroll_run_summary.dart';
 
 class PayrollLocalDataSource {
@@ -359,15 +361,13 @@ class PayrollLocalDataSource {
         for (final item in items) {
           final adjustment = adjustmentByContractId[item.contractId];
           final grossAmount = adjustment?.grossAmount ?? item.baseSalary;
-          final netAmount =
-              ((adjustment?.netAmount ?? item.baseSalary).clamp(
-                    0,
-                    grossAmount,
-                  )
-                  )
-                  .toDouble();
-          final deductionsAmount =
-              (grossAmount - netAmount).clamp(0, grossAmount).toDouble();
+          final netAmount = ((adjustment?.netAmount ?? item.baseSalary).clamp(
+            0,
+            grossAmount,
+          )).toDouble();
+          final deductionsAmount = (grossAmount - netAmount)
+              .clamp(0, grossAmount)
+              .toDouble();
 
           await _database
               .into(_database.payslips)
@@ -454,6 +454,128 @@ class PayrollLocalDataSource {
           ),
         )
         .toList(growable: false);
+  }
+
+  Future<PayrollReportData> getPayrollReport({
+    required String organizationId,
+    required String runId,
+  }) async {
+    final header = await _database
+        .customSelect(
+          '''
+      SELECT
+        pr.id_run AS run_id,
+        o.name AS organization_name,
+        pp.name AS policy_name,
+        pp.pay_frequency AS pay_frequency,
+        s.name AS status_name,
+        CAST(pe.period_start AS TEXT) AS period_start,
+        CAST(pe.period_end AS TEXT) AS period_end,
+        CAST(COALESCE(pe.pay_date, pr.paid_at, pr.approved_at, pr.created_at) AS TEXT) AS pay_date,
+        CAST(COALESCE(pr.paid_at, pr.approved_at, pr.updated_at, pr.created_at) AS TEXT) AS generated_at
+      FROM payroll_runs pr
+      INNER JOIN payroll_periods pe ON pe.id_period = pr.period_id
+      INNER JOIN payroll_policies pp ON pp.id_policy = pe.policy_id
+      INNER JOIN statuses s ON s.id_status = pr.status_id
+      INNER JOIN organizations o ON o.id_organization = pr.organization_id
+      WHERE pr.organization_id = ?
+        AND pr.id_run = ?
+      LIMIT 1
+      ''',
+          variables: [
+            Variable.withString(organizationId),
+            Variable.withString(runId),
+          ],
+          readsFrom: {
+            _database.payrollRuns,
+            _database.payrollPeriods,
+            _database.payrollPolicies,
+            _database.statuses,
+            _database.organizations,
+          },
+        )
+        .getSingleOrNull();
+
+    if (header == null) {
+      throw Exception('No se encontro la corrida de nomina solicitada.');
+    }
+
+    final itemRows = await _database
+        .customSelect(
+          '''
+      SELECT
+        u.name AS user_name,
+        u.first_surname AS user_first_surname,
+        u.second_last_name AS user_second_last_name,
+        ps.gross_amount AS gross_amount,
+        ps.deductions_amount AS deductions_amount,
+        ps.net_amount AS net_amount
+      FROM payslips ps
+      INNER JOIN org_users ou ON ou.id_org_user = ps.org_user_id
+      INNER JOIN users u ON u.id_user = ou.user_id
+      WHERE ps.organization_id = ?
+        AND ps.run_id = ?
+      ORDER BY u.name ASC, u.first_surname ASC
+      ''',
+          variables: [
+            Variable.withString(organizationId),
+            Variable.withString(runId),
+          ],
+          readsFrom: {_database.payslips, _database.orgUsers, _database.users},
+        )
+        .get();
+
+    final items = itemRows
+        .map((row) {
+          final fullName = _composeDisplayNameFromParts(
+            row.read<String>('user_name'),
+            row.read<String?>('user_first_surname'),
+            row.read<String?>('user_second_last_name'),
+          );
+          return PayrollReportItem(
+            employeeName: fullName,
+            grossAmount: row.read<double?>('gross_amount') ?? 0,
+            deductionsAmount: row.read<double?>('deductions_amount') ?? 0,
+            netAmount: row.read<double?>('net_amount') ?? 0,
+          );
+        })
+        .toList(growable: false);
+
+    final totalGrossAmount = items.fold<double>(
+      0,
+      (sum, item) => sum + item.grossAmount,
+    );
+    final totalDeductionsAmount = items.fold<double>(
+      0,
+      (sum, item) => sum + item.deductionsAmount,
+    );
+    final totalNetAmount = items.fold<double>(
+      0,
+      (sum, item) => sum + item.netAmount,
+    );
+
+    return PayrollReportData(
+      runId: header.read<String>('run_id'),
+      organizationName: header.read<String>('organization_name'),
+      policyName: header.read<String>('policy_name'),
+      payFrequency: header.read<String>('pay_frequency'),
+      statusLabel: header.read<String>('status_name'),
+      periodLabel: _buildPeriodLabel(
+        _tryParseDate(header.read<String?>('period_start')),
+        _tryParseDate(header.read<String?>('period_end')),
+      ),
+      payDateLabel: _formatDate(
+        _tryParseDate(header.read<String?>('pay_date')) ?? DateTime.now(),
+      ),
+      generatedAtLabel: _formatDateTime(
+        _tryParseDate(header.read<String?>('generated_at')) ?? DateTime.now(),
+      ),
+      employeesCount: items.length,
+      totalGrossAmount: totalGrossAmount,
+      totalDeductionsAmount: totalDeductionsAmount,
+      totalNetAmount: totalNetAmount,
+      items: items,
+    );
   }
 
   bool _isBiweekly(String payFrequency) {
@@ -700,6 +822,12 @@ class PayrollLocalDataSource {
     final month = monthNames[date.month - 1];
     final day = date.day.toString().padLeft(2, '0');
     return '$day $month ${date.year}';
+  }
+
+  String _formatDateTime(DateTime date) {
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    return '${_formatDate(date)} $hour:$minute';
   }
 
   String _buildPeriodLabel(DateTime? start, DateTime? end) {

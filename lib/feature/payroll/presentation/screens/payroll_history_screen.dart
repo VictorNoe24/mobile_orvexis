@@ -12,6 +12,25 @@ class PayrollHistoryScreen extends StatefulWidget {
 }
 
 class _PayrollHistoryScreenState extends State<PayrollHistoryScreen> {
+  Future<void> _handleExportPdf(PayrollHistoryItem item) async {
+    try {
+      final path = await widget.controller.exportReport(item.runId);
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('PDF guardado en: $path')));
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -61,7 +80,13 @@ class _PayrollHistoryScreenState extends State<PayrollHistoryScreen> {
                       final item = widget.controller.items[index];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: _PayrollHistoryCard(item: item),
+                        child: _PayrollHistoryCard(
+                          item: item,
+                          isExporting: widget.controller.isExporting(
+                            item.runId,
+                          ),
+                          onExportPdf: () => _handleExportPdf(item),
+                        ),
                       );
                     },
                   ),
@@ -73,9 +98,15 @@ class _PayrollHistoryScreenState extends State<PayrollHistoryScreen> {
 }
 
 class _PayrollHistoryCard extends StatelessWidget {
-  const _PayrollHistoryCard({required this.item});
+  const _PayrollHistoryCard({
+    required this.item,
+    required this.isExporting,
+    required this.onExportPdf,
+  });
 
   final PayrollHistoryItem item;
+  final bool isExporting;
+  final VoidCallback onExportPdf;
 
   @override
   Widget build(BuildContext context) {
@@ -118,6 +149,18 @@ class _PayrollHistoryCard extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
+              ),
+              const SizedBox(width: 8),
+              FilledButton.tonalIcon(
+                onPressed: isExporting ? null : onExportPdf,
+                icon: isExporting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.picture_as_pdf_rounded),
+                label: Text(isExporting ? 'Generando...' : 'PDF'),
               ),
             ],
           ),

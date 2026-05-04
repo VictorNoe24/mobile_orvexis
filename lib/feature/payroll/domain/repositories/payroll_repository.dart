@@ -2,6 +2,7 @@ import 'package:mobile_orvexis/feature/payroll/domain/entities/payroll_overview.
 import 'package:mobile_orvexis/feature/payroll/domain/entities/payroll_history_item.dart';
 import 'package:mobile_orvexis/feature/payroll/domain/entities/payroll_payment_adjustment_input.dart';
 import 'package:mobile_orvexis/feature/payroll/domain/entities/payroll_payment_preview.dart';
+import 'package:mobile_orvexis/feature/payroll/domain/entities/payroll_report_data.dart';
 
 abstract class PayrollRepository {
   Future<PayrollOverview> getOverview({required String organizationId});
@@ -19,5 +20,10 @@ abstract class PayrollRepository {
 
   Future<List<PayrollHistoryItem>> getPayrollHistory({
     required String organizationId,
+  });
+
+  Future<PayrollReportData> getPayrollReport({
+    required String organizationId,
+    required String runId,
   });
 }

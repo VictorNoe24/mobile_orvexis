@@ -101,20 +101,16 @@ class _PayrollPaymentScreenState extends State<PayrollPaymentScreen> {
     final absentDays = _absentDayOverrides[item.contractId] ?? 0;
     final automaticNet =
         ((item.baseSalary - (item.dailyRate * absentDays)).clamp(
-              0,
-              item.baseSalary,
-            )
-            )
-            .toDouble();
+          0,
+          item.baseSalary,
+        )).toDouble();
     final manualValue = double.tryParse(
       (controller?.text ?? '').replaceAll(',', '').trim(),
     );
     final netAmount = ((manualValue ?? automaticNet).clamp(
       0,
       item.baseSalary,
-    )
-    )
-        .toDouble();
+    )).toDouble();
 
     return PayrollPaymentAdjustmentInput(
       contractId: item.contractId,
@@ -139,17 +135,12 @@ class _PayrollPaymentScreenState extends State<PayrollPaymentScreen> {
     final next = (((_absentDayOverrides[item.contractId] ?? 0) + delta).clamp(
       0,
       31,
-    )
-    )
-        .toDouble();
+    )).toDouble();
     _absentDayOverrides[item.contractId] = next;
-    final automaticNet =
-        ((item.baseSalary - (item.dailyRate * next)).clamp(
-              0,
-              item.baseSalary,
-            )
-            )
-            .toDouble();
+    final automaticNet = ((item.baseSalary - (item.dailyRate * next)).clamp(
+      0,
+      item.baseSalary,
+    )).toDouble();
     _manualAmountControllers[item.contractId]?.text = automaticNet
         .toStringAsFixed(2);
     setState(() {});

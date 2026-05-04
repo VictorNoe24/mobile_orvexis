@@ -38,9 +38,11 @@ import 'package:mobile_orvexis/feature/projects/domain/usecases/update_project_u
 import 'package:mobile_orvexis/feature/payroll/domain/usecases/get_payroll_overview_usecase.dart';
 import 'package:mobile_orvexis/feature/payroll/domain/usecases/get_payroll_history_usecase.dart';
 import 'package:mobile_orvexis/feature/payroll/domain/usecases/get_payroll_payment_preview_usecase.dart';
+import 'package:mobile_orvexis/feature/payroll/domain/usecases/get_payroll_report_usecase.dart';
 import 'package:mobile_orvexis/feature/payroll/domain/usecases/process_payroll_payment_usecase.dart';
 import 'package:mobile_orvexis/feature/payroll/infrastructure/datasources/payroll_local_datasource.dart';
 import 'package:mobile_orvexis/feature/payroll/infrastructure/repositories/payroll_repository_impl.dart';
+import 'package:mobile_orvexis/feature/payroll/infrastructure/services/payroll_pdf_service.dart';
 import 'package:mobile_orvexis/feature/payroll/presentation/providers/payroll_history_controller.dart';
 import 'package:mobile_orvexis/feature/payroll/presentation/providers/payroll_payment_controller.dart';
 import 'package:mobile_orvexis/feature/payroll/presentation/screens/payroll_history_screen.dart';
@@ -115,10 +117,12 @@ GoRouter appRouter({
   final getPayrollPaymentPreviewUseCase = GetPayrollPaymentPreviewUseCase(
     payrollRepository,
   );
+  final getPayrollReportUseCase = GetPayrollReportUseCase(payrollRepository);
   final processPayrollPaymentUseCase = ProcessPayrollPaymentUseCase(
     payrollRepository,
   );
   final getPayrollHistoryUseCase = GetPayrollHistoryUseCase(payrollRepository);
+  const payrollPdfService = PayrollPdfService();
   final projectsLocalDataSource = ProjectsLocalDataSource(database);
   final projectsRepository = ProjectsRepositoryImpl(projectsLocalDataSource);
   final getProjectsUseCase = GetProjectsUseCase(projectsRepository);
@@ -265,6 +269,8 @@ GoRouter appRouter({
           controller: PayrollHistoryController(
             getCurrentSessionUseCase,
             getPayrollHistoryUseCase,
+            getPayrollReportUseCase,
+            payrollPdfService,
           ),
         ),
       ),
