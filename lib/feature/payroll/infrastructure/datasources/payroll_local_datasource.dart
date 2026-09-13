@@ -425,7 +425,9 @@ class PayrollLocalDataSource {
 
   Future<List<PayrollHistoryItem>> getPayrollHistory({
     required String organizationId,
+    String? projectId,
   }) async {
+    final projectFilter = projectId == null ? '' : 'AND pr.work_unit_id = ?';
     final rows = await _database
         .customSelect(
           '''
@@ -447,6 +449,7 @@ class PayrollLocalDataSource {
       LEFT JOIN work_units wu ON wu.id_work_unit = pr.work_unit_id
       LEFT JOIN payslips ps ON ps.run_id = pr.id_run
       WHERE pr.organization_id = ?
+        $projectFilter
       GROUP BY
         pr.id_run,
         pp.name,
@@ -461,7 +464,10 @@ class PayrollLocalDataSource {
         pr.created_at
       ORDER BY pr.created_at DESC
       ''',
-          variables: [Variable.withString(organizationId)],
+          variables: [
+            Variable.withString(organizationId),
+            if (projectId != null) Variable.withString(projectId),
+          ],
           readsFrom: {
             _database.payrollRuns,
             _database.payrollPeriods,

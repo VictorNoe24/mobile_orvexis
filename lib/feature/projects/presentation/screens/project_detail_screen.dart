@@ -115,6 +115,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     );
   }
 
+  Future<void> _handlePayrollHistory() async {
+    await context.push('/projects/${widget.projectId}/payroll-history');
+  }
+
   Future<void> _handleRemoveAssignedEmployee(
     ProjectAssignedEmployee employee,
   ) async {
@@ -222,44 +226,43 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _ProjectProgressCard(detail: detail),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Nómina',
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 12),
                       FilledButton.icon(
                         onPressed: employees.isEmpty ? null : _handlePayPayroll,
                         icon: const Icon(Icons.payments_rounded),
                         label: const Text('Pagar nómina de esta obra'),
                       ),
-                      if (employees.isEmpty) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          'Asigna empleados a la obra antes de registrar un pago.',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: _handleAssignEmployees,
-                              icon: const Icon(Icons.person_add_alt_1_rounded),
-                              label: const Text('Añadir empleado'),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: FilledButton.tonalIcon(
-                              onPressed: () {},
-                              icon: const Icon(Icons.schedule_rounded),
-                              label: const Text('Registrar horas'),
-                            ),
-                          ),
-                        ],
+                      const SizedBox(height: 8),
+                      TextButton.icon(
+                        onPressed: _handlePayrollHistory,
+                        icon: const Icon(Icons.receipt_long_rounded),
+                        label: const Text('Ver historial de pagos'),
                       ),
+                      if (employees.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            'Asigna empleados a la obra antes de registrar un pago.',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
                       const SizedBox(height: 28),
                       _SectionHeader(
                         title: 'Personal Asignado (${employees.length})',
                         actionLabel: employees.isEmpty ? null : 'Ver todos',
                         onActionTap: _handleViewAllEmployees,
+                      ),
+                      const SizedBox(height: 14),
+                      FilledButton.tonalIcon(
+                        onPressed: _handleAssignEmployees,
+                        icon: const Icon(Icons.person_add_alt_1_rounded),
+                        label: const Text('Asignar personal a la obra'),
                       ),
                       const SizedBox(height: 14),
                       if (employees.isEmpty)

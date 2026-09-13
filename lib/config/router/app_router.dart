@@ -265,6 +265,18 @@ GoRouter appRouter({
         ),
       ),
       GoRoute(
+        path: '/projects/:projectId/payroll-history',
+        builder: (context, state) => PayrollHistoryScreen(
+          projectId: state.pathParameters['projectId']!,
+          controller: PayrollHistoryController(
+            getCurrentSessionUseCase,
+            getPayrollHistoryUseCase,
+            getPayrollReportUseCase,
+            payrollPdfService,
+          ),
+        ),
+      ),
+      GoRoute(
         path: '/payroll/history',
         builder: (context, state) => PayrollHistoryScreen(
           controller: PayrollHistoryController(

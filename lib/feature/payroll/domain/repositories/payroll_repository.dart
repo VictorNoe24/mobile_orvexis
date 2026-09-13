@@ -22,6 +22,7 @@ abstract class PayrollRepository {
 
   Future<List<PayrollHistoryItem>> getPayrollHistory({
     required String organizationId,
+    String? projectId,
   });
 
   Future<PayrollReportData> getPayrollReport({

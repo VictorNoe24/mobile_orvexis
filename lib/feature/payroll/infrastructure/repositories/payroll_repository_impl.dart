@@ -47,8 +47,12 @@ class PayrollRepositoryImpl implements PayrollRepository {
   @override
   Future<List<PayrollHistoryItem>> getPayrollHistory({
     required String organizationId,
+    String? projectId,
   }) {
-    return _localDataSource.getPayrollHistory(organizationId: organizationId);
+    return _localDataSource.getPayrollHistory(
+      organizationId: organizationId,
+      projectId: projectId,
+    );
   }
 
   @override

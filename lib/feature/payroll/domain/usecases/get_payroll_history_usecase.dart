@@ -6,7 +6,13 @@ class GetPayrollHistoryUseCase {
 
   final PayrollRepository _repository;
 
-  Future<List<PayrollHistoryItem>> call({required String organizationId}) {
-    return _repository.getPayrollHistory(organizationId: organizationId);
+  Future<List<PayrollHistoryItem>> call({
+    required String organizationId,
+    String? projectId,
+  }) {
+    return _repository.getPayrollHistory(
+      organizationId: organizationId,
+      projectId: projectId,
+    );
   }
 }

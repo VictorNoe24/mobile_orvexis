@@ -3,9 +3,14 @@ import 'package:mobile_orvexis/feature/payroll/domain/entities/payroll_history_i
 import 'package:mobile_orvexis/feature/payroll/presentation/providers/payroll_history_controller.dart';
 
 class PayrollHistoryScreen extends StatefulWidget {
-  const PayrollHistoryScreen({super.key, required this.controller});
+  const PayrollHistoryScreen({
+    super.key,
+    required this.controller,
+    this.projectId,
+  });
 
   final PayrollHistoryController controller;
+  final String? projectId;
 
   @override
   State<PayrollHistoryScreen> createState() => _PayrollHistoryScreenState();
@@ -61,14 +66,15 @@ class _PayrollHistoryScreenState extends State<PayrollHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    widget.controller.initialize();
+    widget.controller.initialize(projectId: widget.projectId);
   }
 
   @override
   void didUpdateWidget(covariant PayrollHistoryScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.controller != widget.controller) {
-      widget.controller.initialize();
+    if (oldWidget.controller != widget.controller ||
+        oldWidget.projectId != widget.projectId) {
+      widget.controller.initialize(projectId: widget.projectId);
     }
   }
 
@@ -84,7 +90,13 @@ class _PayrollHistoryScreenState extends State<PayrollHistoryScreen> {
       animation: widget.controller,
       builder: (context, _) {
         return Scaffold(
-          appBar: AppBar(title: const Text('Historial de nomina')),
+          appBar: AppBar(
+            title: Text(
+              widget.projectId == null
+                  ? 'Historial de nómina'
+                  : 'Pagos de esta obra',
+            ),
+          ),
           body: widget.controller.isLoading
               ? const Center(child: CircularProgressIndicator())
               : widget.controller.errorMessage != null
@@ -98,25 +110,31 @@ class _PayrollHistoryScreenState extends State<PayrollHistoryScreen> {
                   ),
                 )
               : widget.controller.items.isEmpty
-              ? const _EmptyPayrollHistoryState()
+              ? _EmptyPayrollHistoryState(
+                  isProjectHistory: widget.projectId != null,
+                )
               : SafeArea(
-                  child: ListView.builder(
+                  child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                    itemCount: widget.controller.items.length,
-                    itemBuilder: (context, index) {
-                      final item = widget.controller.items[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _PayrollHistoryCard(
-                          item: item,
-                          isExporting: widget.controller.isExporting(
-                            item.runId,
+                    children: [
+                      if (widget.projectId != null) ...[
+                        _ProjectPayrollSummary(items: widget.controller.items),
+                        const SizedBox(height: 20),
+                      ],
+                      ...widget.controller.items.map(
+                        (item) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _PayrollHistoryCard(
+                            item: item,
+                            isExporting: widget.controller.isExporting(
+                              item.runId,
+                            ),
+                            onSavePdf: () => _handleSavePdf(item),
+                            onSharePdf: () => _handleSharePdf(item),
                           ),
-                          onSavePdf: () => _handleSavePdf(item),
-                          onSharePdf: () => _handleSharePdf(item),
                         ),
-                      );
-                    },
+                      ),
+                    ],
                   ),
                 ),
         );
@@ -280,6 +298,102 @@ class _PayrollHistoryCard extends StatelessWidget {
 
 enum _PdfAction { save, share }
 
+class _ProjectPayrollSummary extends StatelessWidget {
+  const _ProjectPayrollSummary({required this.items});
+
+  final List<PayrollHistoryItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final totalPaid = items.fold<double>(
+      0,
+      (total, item) => total + item.totalNetAmount,
+    );
+    final totalReceipts = items.fold<int>(
+      0,
+      (total, item) => total + item.employeesCount,
+    );
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1841A5), Color(0xFF2E6EF7)],
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Resumen de pagos',
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Acumulado pagado en esta obra',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: Colors.white.withValues(alpha: 0.88),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _currency(totalPaid),
+            style: theme.textTheme.headlineMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _SummaryValue(label: 'Pagos', value: '${items.length}'),
+              ),
+              Expanded(
+                child: _SummaryValue(label: 'Recibos', value: '$totalReceipts'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryValue extends StatelessWidget {
+  const _SummaryValue({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.labelLarge?.copyWith(color: Colors.white70),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _HistoryMetric extends StatelessWidget {
   const _HistoryMetric({required this.label, required this.value});
 
@@ -314,7 +428,9 @@ class _HistoryMetric extends StatelessWidget {
 }
 
 class _EmptyPayrollHistoryState extends StatelessWidget {
-  const _EmptyPayrollHistoryState();
+  const _EmptyPayrollHistoryState({required this.isProjectHistory});
+
+  final bool isProjectHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -329,7 +445,9 @@ class _EmptyPayrollHistoryState extends StatelessWidget {
             Icon(Icons.receipt_long_rounded, size: 42, color: colors.primary),
             const SizedBox(height: 12),
             Text(
-              'Aun no hay pagos registrados en el historial.',
+              isProjectHistory
+                  ? 'Aún no hay pagos registrados para esta obra.'
+                  : 'Aún no hay pagos registrados en el historial.',
               textAlign: TextAlign.center,
               style: Theme.of(
                 context,

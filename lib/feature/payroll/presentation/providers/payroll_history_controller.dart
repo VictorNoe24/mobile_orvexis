@@ -26,7 +26,7 @@ class PayrollHistoryController extends ChangeNotifier {
 
   bool isExporting(String runId) => _exportingRunIds.contains(runId);
 
-  Future<void> initialize() async {
+  Future<void> initialize({String? projectId}) async {
     if (_isDisposed) {
       return;
     }
@@ -47,6 +47,7 @@ class PayrollHistoryController extends ChangeNotifier {
 
       items = await _getPayrollHistoryUseCase(
         organizationId: session.organizationId,
+        projectId: projectId,
       );
     } catch (error) {
       if (_isDisposed) {
