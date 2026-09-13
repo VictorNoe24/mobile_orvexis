@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'config/router/app_router.dart';
 import 'config/theme/app_theme.dart';
 import 'config/theme/theme_controller.dart';
@@ -8,6 +10,7 @@ import 'core/helpers/app_error_handler.dart';
 Future<void> main() async {
   await AppErrorHandler.run(() async {
     WidgetsFlutterBinding.ensureInitialized();
+    await initializeDateFormatting('es_MX');
     final themeController = ThemeController();
     await themeController.loadSavedThemeMode();
     runApp(MyApp(themeController: themeController));
@@ -24,11 +27,38 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final AppDatabase database = AppDatabase();
-  late final router = appRouter(
-    themeController: widget.themeController,
-    database: database,
-  );
+  late AppDatabase database;
+  late GoRouter router;
+  int _appGeneration = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _createRuntime();
+  }
+
+  void _createRuntime() {
+    database = AppDatabase();
+    router = appRouter(
+      themeController: widget.themeController,
+      database: database,
+      onDatabaseRestore: _restoreDatabase,
+    );
+  }
+
+  Future<void> _restoreDatabase(Future<void> Function() restore) async {
+    await database.close();
+    try {
+      await restore();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _appGeneration++;
+          _createRuntime();
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -43,6 +73,7 @@ class _MyAppState extends State<MyApp> {
       animation: widget.themeController,
       builder: (context, _) {
         return MaterialApp.router(
+          key: ValueKey(_appGeneration),
           debugShowCheckedModeBanner: false,
           title: 'Mobile Orvexis',
           routerConfig: router,

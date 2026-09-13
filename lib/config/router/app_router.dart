@@ -1,11 +1,25 @@
 import 'package:go_router/go_router.dart';
 import 'package:mobile_orvexis/config/theme/theme_controller.dart';
 import 'package:mobile_orvexis/core/database/app_database.dart';
+import 'package:mobile_orvexis/feature/backups/domain/usecases/create_backup_usecase.dart';
+import 'package:mobile_orvexis/feature/backups/domain/usecases/export_backup_usecase.dart';
+import 'package:mobile_orvexis/feature/backups/domain/usecases/restore_backup_usecase.dart';
+import 'package:mobile_orvexis/feature/backups/domain/usecases/select_backup_for_restore_usecase.dart';
+import 'package:mobile_orvexis/feature/backups/infrastructure/datasources/backup_local_datasource.dart';
+import 'package:mobile_orvexis/feature/backups/infrastructure/repositories/backup_repository_impl.dart';
+import 'package:mobile_orvexis/feature/backups/presentation/providers/backup_controller.dart';
+import 'package:mobile_orvexis/feature/backups/presentation/screens/backup_screen.dart';
 import 'package:mobile_orvexis/feature/auth/domain/usecases/get_current_session_usecase.dart';
 import 'package:mobile_orvexis/feature/auth/domain/usecases/has_active_session_usecase.dart';
 import 'package:mobile_orvexis/feature/auth/domain/usecases/login_usecase.dart';
 import 'package:mobile_orvexis/feature/auth/domain/usecases/logout_usecase.dart';
 import 'package:mobile_orvexis/feature/auth/domain/usecases/register_admin_with_organization_usecase.dart';
+import 'package:mobile_orvexis/feature/attendance/domain/usecases/get_daily_attendance_usecase.dart';
+import 'package:mobile_orvexis/feature/attendance/domain/usecases/save_daily_attendance_usecase.dart';
+import 'package:mobile_orvexis/feature/attendance/infrastructure/datasources/attendance_local_datasource.dart';
+import 'package:mobile_orvexis/feature/attendance/infrastructure/repositories/attendance_repository_impl.dart';
+import 'package:mobile_orvexis/feature/attendance/presentation/providers/attendance_controller.dart';
+import 'package:mobile_orvexis/feature/attendance/presentation/screens/project_attendance_screen.dart';
 import 'package:mobile_orvexis/feature/employees/domain/usecases/create_employee_usecase.dart';
 import 'package:mobile_orvexis/feature/employees/domain/usecases/get_employee_by_id_usecase.dart';
 import 'package:mobile_orvexis/feature/employees/domain/usecases/get_employee_compensation_usecase.dart';
@@ -82,6 +96,8 @@ import '../../feature/splash/presentation/screens/splash_screen.dart';
 GoRouter appRouter({
   required ThemeController themeController,
   required AppDatabase database,
+  required Future<void> Function(Future<void> Function() restore)
+  onDatabaseRestore,
 }) {
   final authLocalDataSource = AuthLocalDataSource(database);
   final authCredentialsLocalDataSource = AuthCredentialsLocalDataSource();
@@ -97,6 +113,14 @@ GoRouter appRouter({
   final logoutUseCase = LogoutUseCase(authRepository);
   final registerAdminWithOrganizationUseCase =
       RegisterAdminWithOrganizationUseCase(authRepository);
+  final backupLocalDataSource = BackupLocalDataSource(database);
+  final backupRepository = BackupRepositoryImpl(backupLocalDataSource);
+  final createBackupUseCase = CreateBackupUseCase(backupRepository);
+  final exportBackupUseCase = ExportBackupUseCase(backupRepository);
+  final selectBackupForRestoreUseCase = SelectBackupForRestoreUseCase(
+    backupRepository,
+  );
+  final restoreBackupUseCase = RestoreBackupUseCase(backupRepository);
   final employeesLocalDataSource = EmployeesLocalDataSource(database);
   final employeesRepository = EmployeesRepositoryImpl(employeesLocalDataSource);
   final createEmployeeUseCase = CreateEmployeeUseCase(employeesRepository);
@@ -110,6 +134,16 @@ GoRouter appRouter({
   final updateEmployeeUseCase = UpdateEmployeeUseCase(employeesRepository);
   final updateEmployeeCompensationUseCase = UpdateEmployeeCompensationUseCase(
     employeesRepository,
+  );
+  final attendanceLocalDataSource = AttendanceLocalDataSource(database);
+  final attendanceRepository = AttendanceRepositoryImpl(
+    attendanceLocalDataSource,
+  );
+  final getDailyAttendanceUseCase = GetDailyAttendanceUseCase(
+    attendanceRepository,
+  );
+  final saveDailyAttendanceUseCase = SaveDailyAttendanceUseCase(
+    attendanceRepository,
   );
   final payrollLocalDataSource = PayrollLocalDataSource(database);
   final payrollRepository = PayrollRepositoryImpl(payrollLocalDataSource);
@@ -188,6 +222,18 @@ GoRouter appRouter({
         ),
       ),
       GoRoute(
+        path: '/backups',
+        builder: (context, state) => BackupScreen(
+          controller: BackupController(
+            createBackupUseCase: createBackupUseCase,
+            exportBackupUseCase: exportBackupUseCase,
+            selectBackupForRestoreUseCase: selectBackupForRestoreUseCase,
+            onRestoreCompleted: (plan) =>
+                onDatabaseRestore(() => restoreBackupUseCase(plan)),
+          ),
+        ),
+      ),
+      GoRoute(
         path: '/projects/create',
         builder: (context, state) => CreateProjectScreen(
           controller: CreateProjectController(
@@ -263,6 +309,17 @@ GoRouter appRouter({
             getCurrentSessionUseCase,
             getPayrollPaymentPreviewUseCase,
             processPayrollPaymentUseCase,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/projects/:projectId/attendance',
+        builder: (context, state) => ProjectAttendanceScreen(
+          projectId: state.pathParameters['projectId']!,
+          controller: AttendanceController(
+            getCurrentSessionUseCase,
+            getDailyAttendanceUseCase,
+            saveDailyAttendanceUseCase,
           ),
         ),
       ),

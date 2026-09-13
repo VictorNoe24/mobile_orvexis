@@ -14,6 +14,8 @@ class AttendanceEvents extends Table {
   TextColumn get orgUserId => text().references(OrgUsers, #idOrgUser)();
   TextColumn get workUnitId => text().references(WorkUnits, #idWorkUnit)();
   DateTimeColumn get workDate => dateTime()();
+  DateTimeColumn get checkInAt => dateTime().nullable()();
+  DateTimeColumn get checkOutAt => dateTime().nullable()();
   IntColumn get minutesWorked => integer().nullable()();
   TextColumn get statusId => text().references(Statuses, #idStatus)();
   TextColumn get notes => text().nullable()();

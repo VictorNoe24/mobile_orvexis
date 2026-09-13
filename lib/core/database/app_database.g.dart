@@ -6809,6 +6809,28 @@ class $AttendanceEventsTable extends AttendanceEvents
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _checkInAtMeta = const VerificationMeta(
+    'checkInAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> checkInAt = GeneratedColumn<DateTime>(
+    'check_in_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _checkOutAtMeta = const VerificationMeta(
+    'checkOutAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> checkOutAt = GeneratedColumn<DateTime>(
+    'check_out_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _minutesWorkedMeta = const VerificationMeta(
     'minutesWorked',
   );
@@ -6874,6 +6896,8 @@ class $AttendanceEventsTable extends AttendanceEvents
     orgUserId,
     workUnitId,
     workDate,
+    checkInAt,
+    checkOutAt,
     minutesWorked,
     statusId,
     notes,
@@ -6939,6 +6963,21 @@ class $AttendanceEventsTable extends AttendanceEvents
     } else if (isInserting) {
       context.missing(_workDateMeta);
     }
+    if (data.containsKey('check_in_at')) {
+      context.handle(
+        _checkInAtMeta,
+        checkInAt.isAcceptableOrUnknown(data['check_in_at']!, _checkInAtMeta),
+      );
+    }
+    if (data.containsKey('check_out_at')) {
+      context.handle(
+        _checkOutAtMeta,
+        checkOutAt.isAcceptableOrUnknown(
+          data['check_out_at']!,
+          _checkOutAtMeta,
+        ),
+      );
+    }
     if (data.containsKey('minutes_worked')) {
       context.handle(
         _minutesWorkedMeta,
@@ -7003,6 +7042,14 @@ class $AttendanceEventsTable extends AttendanceEvents
         DriftSqlType.dateTime,
         data['${effectivePrefix}work_date'],
       )!,
+      checkInAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}check_in_at'],
+      ),
+      checkOutAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}check_out_at'],
+      ),
       minutesWorked: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}minutes_worked'],
@@ -7038,6 +7085,8 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
   final String orgUserId;
   final String workUnitId;
   final DateTime workDate;
+  final DateTime? checkInAt;
+  final DateTime? checkOutAt;
   final int? minutesWorked;
   final String statusId;
   final String? notes;
@@ -7049,6 +7098,8 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
     required this.orgUserId,
     required this.workUnitId,
     required this.workDate,
+    this.checkInAt,
+    this.checkOutAt,
     this.minutesWorked,
     required this.statusId,
     this.notes,
@@ -7063,6 +7114,12 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
     map['org_user_id'] = Variable<String>(orgUserId);
     map['work_unit_id'] = Variable<String>(workUnitId);
     map['work_date'] = Variable<DateTime>(workDate);
+    if (!nullToAbsent || checkInAt != null) {
+      map['check_in_at'] = Variable<DateTime>(checkInAt);
+    }
+    if (!nullToAbsent || checkOutAt != null) {
+      map['check_out_at'] = Variable<DateTime>(checkOutAt);
+    }
     if (!nullToAbsent || minutesWorked != null) {
       map['minutes_worked'] = Variable<int>(minutesWorked);
     }
@@ -7082,6 +7139,12 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
       orgUserId: Value(orgUserId),
       workUnitId: Value(workUnitId),
       workDate: Value(workDate),
+      checkInAt: checkInAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(checkInAt),
+      checkOutAt: checkOutAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(checkOutAt),
       minutesWorked: minutesWorked == null && nullToAbsent
           ? const Value.absent()
           : Value(minutesWorked),
@@ -7105,6 +7168,8 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
       orgUserId: serializer.fromJson<String>(json['orgUserId']),
       workUnitId: serializer.fromJson<String>(json['workUnitId']),
       workDate: serializer.fromJson<DateTime>(json['workDate']),
+      checkInAt: serializer.fromJson<DateTime?>(json['checkInAt']),
+      checkOutAt: serializer.fromJson<DateTime?>(json['checkOutAt']),
       minutesWorked: serializer.fromJson<int?>(json['minutesWorked']),
       statusId: serializer.fromJson<String>(json['statusId']),
       notes: serializer.fromJson<String?>(json['notes']),
@@ -7121,6 +7186,8 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
       'orgUserId': serializer.toJson<String>(orgUserId),
       'workUnitId': serializer.toJson<String>(workUnitId),
       'workDate': serializer.toJson<DateTime>(workDate),
+      'checkInAt': serializer.toJson<DateTime?>(checkInAt),
+      'checkOutAt': serializer.toJson<DateTime?>(checkOutAt),
       'minutesWorked': serializer.toJson<int?>(minutesWorked),
       'statusId': serializer.toJson<String>(statusId),
       'notes': serializer.toJson<String?>(notes),
@@ -7135,6 +7202,8 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
     String? orgUserId,
     String? workUnitId,
     DateTime? workDate,
+    Value<DateTime?> checkInAt = const Value.absent(),
+    Value<DateTime?> checkOutAt = const Value.absent(),
     Value<int?> minutesWorked = const Value.absent(),
     String? statusId,
     Value<String?> notes = const Value.absent(),
@@ -7146,6 +7215,8 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
     orgUserId: orgUserId ?? this.orgUserId,
     workUnitId: workUnitId ?? this.workUnitId,
     workDate: workDate ?? this.workDate,
+    checkInAt: checkInAt.present ? checkInAt.value : this.checkInAt,
+    checkOutAt: checkOutAt.present ? checkOutAt.value : this.checkOutAt,
     minutesWorked: minutesWorked.present
         ? minutesWorked.value
         : this.minutesWorked,
@@ -7167,6 +7238,10 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
           ? data.workUnitId.value
           : this.workUnitId,
       workDate: data.workDate.present ? data.workDate.value : this.workDate,
+      checkInAt: data.checkInAt.present ? data.checkInAt.value : this.checkInAt,
+      checkOutAt: data.checkOutAt.present
+          ? data.checkOutAt.value
+          : this.checkOutAt,
       minutesWorked: data.minutesWorked.present
           ? data.minutesWorked.value
           : this.minutesWorked,
@@ -7185,6 +7260,8 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
           ..write('orgUserId: $orgUserId, ')
           ..write('workUnitId: $workUnitId, ')
           ..write('workDate: $workDate, ')
+          ..write('checkInAt: $checkInAt, ')
+          ..write('checkOutAt: $checkOutAt, ')
           ..write('minutesWorked: $minutesWorked, ')
           ..write('statusId: $statusId, ')
           ..write('notes: $notes, ')
@@ -7201,6 +7278,8 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
     orgUserId,
     workUnitId,
     workDate,
+    checkInAt,
+    checkOutAt,
     minutesWorked,
     statusId,
     notes,
@@ -7216,6 +7295,8 @@ class AttendanceEvent extends DataClass implements Insertable<AttendanceEvent> {
           other.orgUserId == this.orgUserId &&
           other.workUnitId == this.workUnitId &&
           other.workDate == this.workDate &&
+          other.checkInAt == this.checkInAt &&
+          other.checkOutAt == this.checkOutAt &&
           other.minutesWorked == this.minutesWorked &&
           other.statusId == this.statusId &&
           other.notes == this.notes &&
@@ -7229,6 +7310,8 @@ class AttendanceEventsCompanion extends UpdateCompanion<AttendanceEvent> {
   final Value<String> orgUserId;
   final Value<String> workUnitId;
   final Value<DateTime> workDate;
+  final Value<DateTime?> checkInAt;
+  final Value<DateTime?> checkOutAt;
   final Value<int?> minutesWorked;
   final Value<String> statusId;
   final Value<String?> notes;
@@ -7241,6 +7324,8 @@ class AttendanceEventsCompanion extends UpdateCompanion<AttendanceEvent> {
     this.orgUserId = const Value.absent(),
     this.workUnitId = const Value.absent(),
     this.workDate = const Value.absent(),
+    this.checkInAt = const Value.absent(),
+    this.checkOutAt = const Value.absent(),
     this.minutesWorked = const Value.absent(),
     this.statusId = const Value.absent(),
     this.notes = const Value.absent(),
@@ -7254,6 +7339,8 @@ class AttendanceEventsCompanion extends UpdateCompanion<AttendanceEvent> {
     required String orgUserId,
     required String workUnitId,
     required DateTime workDate,
+    this.checkInAt = const Value.absent(),
+    this.checkOutAt = const Value.absent(),
     this.minutesWorked = const Value.absent(),
     required String statusId,
     this.notes = const Value.absent(),
@@ -7271,6 +7358,8 @@ class AttendanceEventsCompanion extends UpdateCompanion<AttendanceEvent> {
     Expression<String>? orgUserId,
     Expression<String>? workUnitId,
     Expression<DateTime>? workDate,
+    Expression<DateTime>? checkInAt,
+    Expression<DateTime>? checkOutAt,
     Expression<int>? minutesWorked,
     Expression<String>? statusId,
     Expression<String>? notes,
@@ -7284,6 +7373,8 @@ class AttendanceEventsCompanion extends UpdateCompanion<AttendanceEvent> {
       if (orgUserId != null) 'org_user_id': orgUserId,
       if (workUnitId != null) 'work_unit_id': workUnitId,
       if (workDate != null) 'work_date': workDate,
+      if (checkInAt != null) 'check_in_at': checkInAt,
+      if (checkOutAt != null) 'check_out_at': checkOutAt,
       if (minutesWorked != null) 'minutes_worked': minutesWorked,
       if (statusId != null) 'status_id': statusId,
       if (notes != null) 'notes': notes,
@@ -7299,6 +7390,8 @@ class AttendanceEventsCompanion extends UpdateCompanion<AttendanceEvent> {
     Value<String>? orgUserId,
     Value<String>? workUnitId,
     Value<DateTime>? workDate,
+    Value<DateTime?>? checkInAt,
+    Value<DateTime?>? checkOutAt,
     Value<int?>? minutesWorked,
     Value<String>? statusId,
     Value<String?>? notes,
@@ -7312,6 +7405,8 @@ class AttendanceEventsCompanion extends UpdateCompanion<AttendanceEvent> {
       orgUserId: orgUserId ?? this.orgUserId,
       workUnitId: workUnitId ?? this.workUnitId,
       workDate: workDate ?? this.workDate,
+      checkInAt: checkInAt ?? this.checkInAt,
+      checkOutAt: checkOutAt ?? this.checkOutAt,
       minutesWorked: minutesWorked ?? this.minutesWorked,
       statusId: statusId ?? this.statusId,
       notes: notes ?? this.notes,
@@ -7338,6 +7433,12 @@ class AttendanceEventsCompanion extends UpdateCompanion<AttendanceEvent> {
     }
     if (workDate.present) {
       map['work_date'] = Variable<DateTime>(workDate.value);
+    }
+    if (checkInAt.present) {
+      map['check_in_at'] = Variable<DateTime>(checkInAt.value);
+    }
+    if (checkOutAt.present) {
+      map['check_out_at'] = Variable<DateTime>(checkOutAt.value);
     }
     if (minutesWorked.present) {
       map['minutes_worked'] = Variable<int>(minutesWorked.value);
@@ -7368,6 +7469,8 @@ class AttendanceEventsCompanion extends UpdateCompanion<AttendanceEvent> {
           ..write('orgUserId: $orgUserId, ')
           ..write('workUnitId: $workUnitId, ')
           ..write('workDate: $workDate, ')
+          ..write('checkInAt: $checkInAt, ')
+          ..write('checkOutAt: $checkOutAt, ')
           ..write('minutesWorked: $minutesWorked, ')
           ..write('statusId: $statusId, ')
           ..write('notes: $notes, ')
@@ -24089,6 +24192,8 @@ typedef $$AttendanceEventsTableCreateCompanionBuilder =
       required String orgUserId,
       required String workUnitId,
       required DateTime workDate,
+      Value<DateTime?> checkInAt,
+      Value<DateTime?> checkOutAt,
       Value<int?> minutesWorked,
       required String statusId,
       Value<String?> notes,
@@ -24103,6 +24208,8 @@ typedef $$AttendanceEventsTableUpdateCompanionBuilder =
       Value<String> orgUserId,
       Value<String> workUnitId,
       Value<DateTime> workDate,
+      Value<DateTime?> checkInAt,
+      Value<DateTime?> checkOutAt,
       Value<int?> minutesWorked,
       Value<String> statusId,
       Value<String?> notes,
@@ -24225,6 +24332,16 @@ class $$AttendanceEventsTableFilterComposer
 
   ColumnFilters<DateTime> get workDate => $composableBuilder(
     column: $table.workDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get checkInAt => $composableBuilder(
+    column: $table.checkInAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get checkOutAt => $composableBuilder(
+    column: $table.checkOutAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -24360,6 +24477,16 @@ class $$AttendanceEventsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get checkInAt => $composableBuilder(
+    column: $table.checkInAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get checkOutAt => $composableBuilder(
+    column: $table.checkOutAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get minutesWorked => $composableBuilder(
     column: $table.minutesWorked,
     builder: (column) => ColumnOrderings(column),
@@ -24489,6 +24616,14 @@ class $$AttendanceEventsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get workDate =>
       $composableBuilder(column: $table.workDate, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get checkInAt =>
+      $composableBuilder(column: $table.checkInAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get checkOutAt => $composableBuilder(
+    column: $table.checkOutAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get minutesWorked => $composableBuilder(
     column: $table.minutesWorked,
@@ -24637,6 +24772,8 @@ class $$AttendanceEventsTableTableManager
                 Value<String> orgUserId = const Value.absent(),
                 Value<String> workUnitId = const Value.absent(),
                 Value<DateTime> workDate = const Value.absent(),
+                Value<DateTime?> checkInAt = const Value.absent(),
+                Value<DateTime?> checkOutAt = const Value.absent(),
                 Value<int?> minutesWorked = const Value.absent(),
                 Value<String> statusId = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
@@ -24649,6 +24786,8 @@ class $$AttendanceEventsTableTableManager
                 orgUserId: orgUserId,
                 workUnitId: workUnitId,
                 workDate: workDate,
+                checkInAt: checkInAt,
+                checkOutAt: checkOutAt,
                 minutesWorked: minutesWorked,
                 statusId: statusId,
                 notes: notes,
@@ -24663,6 +24802,8 @@ class $$AttendanceEventsTableTableManager
                 required String orgUserId,
                 required String workUnitId,
                 required DateTime workDate,
+                Value<DateTime?> checkInAt = const Value.absent(),
+                Value<DateTime?> checkOutAt = const Value.absent(),
                 Value<int?> minutesWorked = const Value.absent(),
                 required String statusId,
                 Value<String?> notes = const Value.absent(),
@@ -24675,6 +24816,8 @@ class $$AttendanceEventsTableTableManager
                 orgUserId: orgUserId,
                 workUnitId: workUnitId,
                 workDate: workDate,
+                checkInAt: checkInAt,
+                checkOutAt: checkOutAt,
                 minutesWorked: minutesWorked,
                 statusId: statusId,
                 notes: notes,

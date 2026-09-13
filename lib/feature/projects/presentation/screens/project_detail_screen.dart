@@ -119,6 +119,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     await context.push('/projects/${widget.projectId}/payroll-history');
   }
 
+  Future<void> _handleAttendance() async {
+    await context.push('/projects/${widget.projectId}/attendance');
+  }
+
   Future<void> _handleRemoveAssignedEmployee(
     ProjectAssignedEmployee employee,
   ) async {
@@ -243,6 +247,11 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                         onPressed: _handlePayrollHistory,
                         icon: const Icon(Icons.receipt_long_rounded),
                         label: const Text('Ver historial de pagos'),
+                      ),
+                      TextButton.icon(
+                        onPressed: _handleAttendance,
+                        icon: const Icon(Icons.fact_check_rounded),
+                        label: const Text('Registrar asistencia'),
                       ),
                       if (employees.isEmpty)
                         Padding(

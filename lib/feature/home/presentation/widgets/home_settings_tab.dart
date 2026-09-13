@@ -6,11 +6,13 @@ class HomeSettingsTab extends StatelessWidget {
     super.key,
     required this.themeController,
     required this.onManageRoles,
+    required this.onManageBackups,
     required this.onLogout,
   });
 
   final ThemeController themeController;
   final VoidCallback onManageRoles;
+  final VoidCallback onManageBackups;
   final VoidCallback onLogout;
 
   @override
@@ -41,6 +43,12 @@ class HomeSettingsTab extends StatelessWidget {
           onPressed: onManageRoles,
           icon: const Icon(Icons.badge_rounded),
           label: const Text('Gestionar roles'),
+        ),
+        const SizedBox(height: 16),
+        FilledButton.tonalIcon(
+          onPressed: onManageBackups,
+          icon: const Icon(Icons.backup_rounded),
+          label: const Text('Respaldo y restauración'),
         ),
         const SizedBox(height: 16),
         FilledButton.icon(

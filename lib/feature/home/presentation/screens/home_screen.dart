@@ -44,6 +44,10 @@ class _HomeScreenState extends State<HomeScreen> {
     await context.push('/roles');
   }
 
+  Future<void> _handleManageBackups() async {
+    await context.push('/backups');
+  }
+
   Future<void> _handleLogout() async {
     await widget.logoutUseCase();
     if (!mounted) return;
@@ -174,6 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return HomeSettingsTab(
           themeController: widget.themeController,
           onManageRoles: _handleManageRoles,
+          onManageBackups: _handleManageBackups,
           onLogout: _handleLogout,
         );
       case 3:
