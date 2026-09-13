@@ -8,6 +8,7 @@ class PayrollPaymentPreview {
     required this.periodEnd,
     required this.periodLabel,
     required this.payDateLabel,
+    this.projectName,
     required this.employeesCount,
     required this.totalAmount,
     required this.items,
@@ -19,6 +20,7 @@ class PayrollPaymentPreview {
   final DateTime periodEnd;
   final String periodLabel;
   final String payDateLabel;
+  final String? projectName;
   final int employeesCount;
   final double totalAmount;
   final List<PayrollPaymentPreviewItem> items;

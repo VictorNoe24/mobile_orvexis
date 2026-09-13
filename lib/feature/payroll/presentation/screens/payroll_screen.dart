@@ -41,22 +41,8 @@ class _PayrollScreenState extends State<PayrollScreen> {
   Widget build(BuildContext context) {
     return PayrollTab(
       controller: _controller,
-      onPayWeekly: () => _handlePayFrequency(context, 'weekly'),
-      onPayBiweekly: () => _handlePayFrequency(context, 'biweekly'),
       onViewHistory: () => _handleViewHistory(context),
     );
-  }
-
-  Future<void> _handlePayFrequency(
-    BuildContext context,
-    String payFrequency,
-  ) async {
-    final didProcess = await context.push<bool>('/payroll/pay/$payFrequency');
-    if (!mounted || didProcess != true) {
-      return;
-    }
-
-    await _controller.refresh();
   }
 
   Future<void> _handleViewHistory(BuildContext context) async {

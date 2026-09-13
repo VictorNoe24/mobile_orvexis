@@ -10,11 +10,13 @@ class ProcessPayrollPaymentUseCase {
     required String organizationId,
     required String payFrequency,
     required List<PayrollPaymentAdjustmentInput> adjustments,
+    String? projectId,
   }) {
     return _repository.processPayment(
       organizationId: organizationId,
       payFrequency: payFrequency,
       adjustments: adjustments,
+      projectId: projectId,
     );
   }
 }

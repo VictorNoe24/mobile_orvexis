@@ -110,6 +110,8 @@ class CreateEmployeeForm extends StatelessWidget {
               validator: emailValidator,
               decoration: const InputDecoration(
                 hintText: 'empleado@company.com',
+                helperText:
+                    'Se genera con el primer nombre y apellido; puedes editarlo.',
               ),
             ),
           ),

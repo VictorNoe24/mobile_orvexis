@@ -21,11 +21,16 @@ class _CreateEmployeeScreenState extends State<CreateEmployeeScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   bool _isActive = true;
+  bool _isWritingSuggestedEmail = false;
+  bool _emailWasEditedManually = false;
   String? _selectedRoleName;
 
   @override
   void initState() {
     super.initState();
+    _nameController.addListener(_suggestEmail);
+    _firstSurnameController.addListener(_suggestEmail);
+    _emailController.addListener(_trackEmailEdition);
     widget.controller.initialize();
   }
 
@@ -40,12 +45,51 @@ class _CreateEmployeeScreenState extends State<CreateEmployeeScreen> {
   @override
   void dispose() {
     widget.controller.dispose();
+    _nameController.removeListener(_suggestEmail);
+    _firstSurnameController.removeListener(_suggestEmail);
+    _emailController.removeListener(_trackEmailEdition);
     _nameController.dispose();
     _firstSurnameController.dispose();
     _secondSurnameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     super.dispose();
+  }
+
+  void _suggestEmail() {
+    if (_emailWasEditedManually) return;
+
+    final firstName = _firstEmailPart(_nameController.text);
+    final firstSurname = _firstEmailPart(_firstSurnameController.text);
+    if (firstName.isEmpty || firstSurname.isEmpty) return;
+
+    final suggestedEmail = '$firstName.$firstSurname@gmail.com';
+    if (_emailController.text == suggestedEmail) return;
+
+    _isWritingSuggestedEmail = true;
+    _emailController.value = TextEditingValue(
+      text: suggestedEmail,
+      selection: TextSelection.collapsed(offset: suggestedEmail.length),
+    );
+    _isWritingSuggestedEmail = false;
+  }
+
+  void _trackEmailEdition() {
+    if (_isWritingSuggestedEmail) return;
+    _emailWasEditedManually = _emailController.text.trim().isNotEmpty;
+  }
+
+  String _firstEmailPart(String value) {
+    final firstWord = value.trim().split(RegExp(r'\s+')).firstOrNull ?? '';
+    return firstWord
+        .toLowerCase()
+        .replaceAll(RegExp(r'[áàäâãå]'), 'a')
+        .replaceAll(RegExp(r'[éèëê]'), 'e')
+        .replaceAll(RegExp(r'[íìïî]'), 'i')
+        .replaceAll(RegExp(r'[óòöôõ]'), 'o')
+        .replaceAll(RegExp(r'[úùüû]'), 'u')
+        .replaceAll('ñ', 'n')
+        .replaceAll(RegExp(r'[^a-z0-9]'), '');
   }
 
   Future<void> _handleSubmit() async {

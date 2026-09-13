@@ -83,6 +83,16 @@ class PayrollHistoryController extends ChangeNotifier {
     }
   }
 
+  Future<String?> saveReport(String runId) async {
+    final reportPath = await exportReport(runId);
+    return _payrollPdfService.saveReport(reportPath);
+  }
+
+  Future<void> shareReport(String runId) async {
+    final reportPath = await exportReport(runId);
+    await _payrollPdfService.shareReport(reportPath);
+  }
+
   void _notifySafely() {
     if (_isDisposed) {
       return;

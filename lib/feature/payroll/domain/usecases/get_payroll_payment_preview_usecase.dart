@@ -9,10 +9,12 @@ class GetPayrollPaymentPreviewUseCase {
   Future<PayrollPaymentPreview> call({
     required String organizationId,
     required String payFrequency,
+    String? projectId,
   }) {
     return _repository.getPaymentPreview(
       organizationId: organizationId,
       payFrequency: payFrequency,
+      projectId: projectId,
     );
   }
 }

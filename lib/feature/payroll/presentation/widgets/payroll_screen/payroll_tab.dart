@@ -9,14 +9,10 @@ class PayrollTab extends StatelessWidget {
   const PayrollTab({
     super.key,
     required this.controller,
-    required this.onPayWeekly,
-    required this.onPayBiweekly,
     required this.onViewHistory,
   });
 
   final PayrollController controller;
-  final VoidCallback onPayWeekly;
-  final VoidCallback onPayBiweekly;
   final VoidCallback onViewHistory;
 
   @override
@@ -52,24 +48,14 @@ class PayrollTab extends StatelessWidget {
               children: [
                 _PayrollHeroCard(overview: overview),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: onPayWeekly,
-                        icon: const Icon(Icons.payments_rounded),
-                        label: const Text('Pagar semanal'),
-                      ),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.apartment_rounded),
+                    title: const Text('Nómina por obra'),
+                    subtitle: const Text(
+                      'Entra a una obra y usa “Pagar nómina de esta obra” para pagar los sueldos de su personal asignado.',
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton.tonalIcon(
-                        onPressed: onPayBiweekly,
-                        icon: const Icon(Icons.calendar_month_rounded),
-                        label: const Text('Pagar quincenal'),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
                 const SizedBox(height: 24),
                 Text(

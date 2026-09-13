@@ -12,14 +12,41 @@ class PayrollHistoryScreen extends StatefulWidget {
 }
 
 class _PayrollHistoryScreenState extends State<PayrollHistoryScreen> {
-  Future<void> _handleExportPdf(PayrollHistoryItem item) async {
+  Future<void> _handleSavePdf(PayrollHistoryItem item) async {
     try {
-      final path = await widget.controller.exportReport(item.runId);
+      final path = await widget.controller.saveReport(item.runId);
       if (!mounted) return;
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('PDF guardado en: $path')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            path == null
+                ? 'Elige “Guardar en Archivos” en el menú del sistema.'
+                : 'PDF guardado en: $path',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleSharePdf(PayrollHistoryItem item) async {
+    try {
+      await widget.controller.shareReport(item.runId);
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Selecciona la aplicación para compartir el PDF.'),
+        ),
+      );
     } catch (error) {
       if (!mounted) return;
 
@@ -85,7 +112,8 @@ class _PayrollHistoryScreenState extends State<PayrollHistoryScreen> {
                           isExporting: widget.controller.isExporting(
                             item.runId,
                           ),
-                          onExportPdf: () => _handleExportPdf(item),
+                          onSavePdf: () => _handleSavePdf(item),
+                          onSharePdf: () => _handleSharePdf(item),
                         ),
                       );
                     },
@@ -101,12 +129,14 @@ class _PayrollHistoryCard extends StatelessWidget {
   const _PayrollHistoryCard({
     required this.item,
     required this.isExporting,
-    required this.onExportPdf,
+    required this.onSavePdf,
+    required this.onSharePdf,
   });
 
   final PayrollHistoryItem item;
   final bool isExporting;
-  final VoidCallback onExportPdf;
+  final VoidCallback onSavePdf;
+  final VoidCallback onSharePdf;
 
   @override
   Widget build(BuildContext context) {
@@ -151,20 +181,57 @@ class _PayrollHistoryCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              FilledButton.tonalIcon(
-                onPressed: isExporting ? null : onExportPdf,
-                icon: isExporting
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.picture_as_pdf_rounded),
-                label: Text(isExporting ? 'Generando...' : 'PDF'),
+              PopupMenuButton<_PdfAction>(
+                enabled: !isExporting,
+                tooltip: 'Opciones del PDF',
+                onSelected: (action) {
+                  switch (action) {
+                    case _PdfAction.save:
+                      onSavePdf();
+                    case _PdfAction.share:
+                      onSharePdf();
+                  }
+                },
+                itemBuilder: (context) => const [
+                  PopupMenuItem(
+                    value: _PdfAction.save,
+                    child: ListTile(
+                      leading: Icon(Icons.save_alt_rounded),
+                      title: Text('Guardar PDF'),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: _PdfAction.share,
+                    child: ListTile(
+                      leading: Icon(Icons.share_rounded),
+                      title: Text('Compartir PDF'),
+                    ),
+                  ),
+                ],
+                child: FilledButton.tonalIcon(
+                  onPressed: null,
+                  icon: isExporting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.picture_as_pdf_rounded),
+                  label: Text(isExporting ? 'Generando...' : 'PDF'),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 8),
+          if (item.projectName != null) ...[
+            Text(
+              'Obra: ${item.projectName}',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+          ],
           Text(
             item.payFrequency == 'biweekly'
                 ? 'Nomina quincenal'
@@ -210,6 +277,8 @@ class _PayrollHistoryCard extends StatelessWidget {
     );
   }
 }
+
+enum _PdfAction { save, share }
 
 class _HistoryMetric extends StatelessWidget {
   const _HistoryMetric({required this.label, required this.value});

@@ -1,11 +1,13 @@
 import 'dart:io';
 
+import 'package:file_selector/file_selector.dart';
 import 'package:mobile_orvexis/feature/payroll/domain/entities/payroll_report_data.dart';
 import 'package:mobile_orvexis/feature/payroll/domain/entities/payroll_report_item.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:share_plus/share_plus.dart';
 
 class PayrollPdfService {
   const PayrollPdfService();
@@ -47,6 +49,38 @@ class PayrollPdfService {
     final file = File(p.join(reportsDir.path, 'nomina_${report.runId}.pdf'));
     await file.writeAsBytes(await pdf.save());
     return file.path;
+  }
+
+  Future<String?> saveReport(String reportPath) async {
+    if (Platform.isIOS) {
+      await shareReport(reportPath);
+      return null;
+    }
+
+    final directoryPath = await getDirectoryPath(
+      confirmButtonText: 'Guardar PDF aquí',
+    );
+    if (directoryPath == null) {
+      return null;
+    }
+
+    final sourceFile = File(reportPath);
+    final destinationPath = p.join(directoryPath, p.basename(reportPath));
+    await sourceFile.copy(destinationPath);
+    return destinationPath;
+  }
+
+  Future<void> shareReport(String reportPath) async {
+    final filename = p.basename(reportPath);
+    await SharePlus.instance.share(
+      ShareParams(
+        title: 'Nómina Orvexis',
+        subject: 'Reporte de nómina',
+        text: 'Comparto el reporte de nómina $filename.',
+        files: [XFile(reportPath, mimeType: 'application/pdf')],
+        fileNameOverrides: [filename],
+      ),
+    );
   }
 
   pw.Widget _buildHeader(PayrollReportData report) {
@@ -136,7 +170,9 @@ class PayrollPdfService {
       ),
       child: pw.Row(
         children: [
-          pw.Expanded(child: _metaItem('TIPO', _frequencyLabel(report.payFrequency))),
+          pw.Expanded(
+            child: _metaItem('TIPO', _frequencyLabel(report.payFrequency)),
+          ),
           pw.SizedBox(width: 12),
           pw.Expanded(child: _metaItem('POLITICA', report.policyName)),
           pw.SizedBox(width: 12),
@@ -182,7 +218,10 @@ class PayrollPdfService {
         pw.SizedBox(width: 10),
         _summaryCard('SUELDO BASE TOTAL', _currency(report.totalGrossAmount)),
         pw.SizedBox(width: 10),
-        _summaryCard('DESCUENTOS TOTAL', _currency(report.totalDeductionsAmount)),
+        _summaryCard(
+          'DESCUENTOS TOTAL',
+          _currency(report.totalDeductionsAmount),
+        ),
         pw.SizedBox(width: 10),
         _summaryCard('PAGADO TOTAL', _currency(report.totalNetAmount)),
       ],
@@ -231,10 +270,7 @@ class PayrollPdfService {
       ),
       child: pw.Text(
         'Este resumen muestra, por trabajador, el sueldo configurado del periodo, el descuento aplicado y el monto final efectivamente pagado.',
-        style: pw.TextStyle(
-          fontSize: 8,
-          color: PdfColor.fromHex('#64748B'),
-        ),
+        style: pw.TextStyle(fontSize: 8, color: PdfColor.fromHex('#64748B')),
       ),
     );
   }
@@ -271,9 +307,7 @@ class PayrollPdfService {
     return pw.TableHelper.fromTextArray(
       headers: headers,
       data: rows,
-      headerDecoration: pw.BoxDecoration(
-        color: PdfColor.fromHex('#DCEAFE'),
-      ),
+      headerDecoration: pw.BoxDecoration(color: PdfColor.fromHex('#DCEAFE')),
       headerStyle: pw.TextStyle(
         fontSize: 8,
         fontWeight: pw.FontWeight.bold,
@@ -285,9 +319,7 @@ class PayrollPdfService {
         color: PdfColor.fromHex('#D6E1F1'),
         width: 0.7,
       ),
-      oddRowDecoration: pw.BoxDecoration(
-        color: PdfColor.fromHex('#FBFDFF'),
-      ),
+      oddRowDecoration: pw.BoxDecoration(color: PdfColor.fromHex('#FBFDFF')),
       cellAlignments: {
         0: pw.Alignment.centerLeft,
         1: pw.Alignment.centerRight,
@@ -339,7 +371,9 @@ class PayrollPdfService {
             data,
             style: pw.TextStyle(
               fontSize: 8.5,
-              fontWeight: isTotalsRow ? pw.FontWeight.bold : pw.FontWeight.normal,
+              fontWeight: isTotalsRow
+                  ? pw.FontWeight.bold
+                  : pw.FontWeight.normal,
               color: columnIndex == 2
                   ? PdfColor.fromHex('#DC2626')
                   : columnIndex == 3
@@ -358,10 +392,7 @@ class PayrollPdfService {
       children: [
         pw.Text(
           'Generado ${report.generatedAtLabel}',
-          style: pw.TextStyle(
-            fontSize: 7,
-            color: PdfColor.fromHex('#64748B'),
-          ),
+          style: pw.TextStyle(fontSize: 7, color: PdfColor.fromHex('#64748B')),
         ),
         pw.Text(
           'Total neto pagado: ${_currency(report.totalNetAmount)}',

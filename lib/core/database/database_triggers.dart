@@ -132,14 +132,22 @@ const List<UpdatedAtTriggerDefinition> updatedAtTriggers = [
 
 Future<void> createUpdatedAtTriggers(GeneratedDatabase db) async {
   for (final trigger in updatedAtTriggers) {
+    // Los triggers previos usaban CURRENT_TIMESTAMP, que SQLite guarda como
+    // texto UTC. Drift guarda DateTime como un timestamp Unix en SQLite, así
+    // que mezclar ambos formatos hacía que updated_at pudiera interpretarse
+    // con una fecha u hora incorrecta.
+    //
+    // Se elimina primero el trigger para actualizar también las bases de datos
+    // que ya existían antes de esta corrección.
+    await db.customStatement('DROP TRIGGER IF EXISTS ${trigger.triggerName}');
     await db.customStatement('''
-      CREATE TRIGGER IF NOT EXISTS ${trigger.triggerName}
+      CREATE TRIGGER ${trigger.triggerName}
       AFTER UPDATE ON ${trigger.tableName}
       FOR EACH ROW
       WHEN OLD.updated_at = NEW.updated_at
       BEGIN
         UPDATE ${trigger.tableName}
-        SET updated_at = CURRENT_TIMESTAMP
+        SET updated_at = CAST(strftime('%s', 'now') AS INTEGER)
         WHERE ${trigger.idColumn} = OLD.${trigger.idColumn};
       END;
     ''');

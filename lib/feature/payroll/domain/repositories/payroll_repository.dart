@@ -10,12 +10,14 @@ abstract class PayrollRepository {
   Future<PayrollPaymentPreview> getPaymentPreview({
     required String organizationId,
     required String payFrequency,
+    String? projectId,
   });
 
   Future<void> processPayment({
     required String organizationId,
     required String payFrequency,
     required List<PayrollPaymentAdjustmentInput> adjustments,
+    String? projectId,
   });
 
   Future<List<PayrollHistoryItem>> getPayrollHistory({

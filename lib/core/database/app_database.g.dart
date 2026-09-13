@@ -9844,6 +9844,20 @@ class $PayrollRunsTable extends PayrollRuns
       'REFERENCES payroll_periods (id_period)',
     ),
   );
+  static const VerificationMeta _workUnitIdMeta = const VerificationMeta(
+    'workUnitId',
+  );
+  @override
+  late final GeneratedColumn<String> workUnitId = GeneratedColumn<String>(
+    'work_unit_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES work_units (id_work_unit)',
+    ),
+  );
   static const VerificationMeta _statusIdMeta = const VerificationMeta(
     'statusId',
   );
@@ -9907,6 +9921,7 @@ class $PayrollRunsTable extends PayrollRuns
     idRun,
     organizationId,
     periodId,
+    workUnitId,
     statusId,
     createdAt,
     updatedAt,
@@ -9949,6 +9964,15 @@ class $PayrollRunsTable extends PayrollRuns
       );
     } else if (isInserting) {
       context.missing(_periodIdMeta);
+    }
+    if (data.containsKey('work_unit_id')) {
+      context.handle(
+        _workUnitIdMeta,
+        workUnitId.isAcceptableOrUnknown(
+          data['work_unit_id']!,
+          _workUnitIdMeta,
+        ),
+      );
     }
     if (data.containsKey('status_id')) {
       context.handle(
@@ -10003,6 +10027,10 @@ class $PayrollRunsTable extends PayrollRuns
         DriftSqlType.string,
         data['${effectivePrefix}period_id'],
       )!,
+      workUnitId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}work_unit_id'],
+      ),
       statusId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}status_id'],
@@ -10036,6 +10064,7 @@ class PayrollRun extends DataClass implements Insertable<PayrollRun> {
   final String idRun;
   final String organizationId;
   final String periodId;
+  final String? workUnitId;
   final String statusId;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -10045,6 +10074,7 @@ class PayrollRun extends DataClass implements Insertable<PayrollRun> {
     required this.idRun,
     required this.organizationId,
     required this.periodId,
+    this.workUnitId,
     required this.statusId,
     required this.createdAt,
     required this.updatedAt,
@@ -10057,6 +10087,9 @@ class PayrollRun extends DataClass implements Insertable<PayrollRun> {
     map['id_run'] = Variable<String>(idRun);
     map['organization_id'] = Variable<String>(organizationId);
     map['period_id'] = Variable<String>(periodId);
+    if (!nullToAbsent || workUnitId != null) {
+      map['work_unit_id'] = Variable<String>(workUnitId);
+    }
     map['status_id'] = Variable<String>(statusId);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -10074,6 +10107,9 @@ class PayrollRun extends DataClass implements Insertable<PayrollRun> {
       idRun: Value(idRun),
       organizationId: Value(organizationId),
       periodId: Value(periodId),
+      workUnitId: workUnitId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(workUnitId),
       statusId: Value(statusId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -10095,6 +10131,7 @@ class PayrollRun extends DataClass implements Insertable<PayrollRun> {
       idRun: serializer.fromJson<String>(json['idRun']),
       organizationId: serializer.fromJson<String>(json['organizationId']),
       periodId: serializer.fromJson<String>(json['periodId']),
+      workUnitId: serializer.fromJson<String?>(json['workUnitId']),
       statusId: serializer.fromJson<String>(json['statusId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -10109,6 +10146,7 @@ class PayrollRun extends DataClass implements Insertable<PayrollRun> {
       'idRun': serializer.toJson<String>(idRun),
       'organizationId': serializer.toJson<String>(organizationId),
       'periodId': serializer.toJson<String>(periodId),
+      'workUnitId': serializer.toJson<String?>(workUnitId),
       'statusId': serializer.toJson<String>(statusId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -10121,6 +10159,7 @@ class PayrollRun extends DataClass implements Insertable<PayrollRun> {
     String? idRun,
     String? organizationId,
     String? periodId,
+    Value<String?> workUnitId = const Value.absent(),
     String? statusId,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -10130,6 +10169,7 @@ class PayrollRun extends DataClass implements Insertable<PayrollRun> {
     idRun: idRun ?? this.idRun,
     organizationId: organizationId ?? this.organizationId,
     periodId: periodId ?? this.periodId,
+    workUnitId: workUnitId.present ? workUnitId.value : this.workUnitId,
     statusId: statusId ?? this.statusId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -10143,6 +10183,9 @@ class PayrollRun extends DataClass implements Insertable<PayrollRun> {
           ? data.organizationId.value
           : this.organizationId,
       periodId: data.periodId.present ? data.periodId.value : this.periodId,
+      workUnitId: data.workUnitId.present
+          ? data.workUnitId.value
+          : this.workUnitId,
       statusId: data.statusId.present ? data.statusId.value : this.statusId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -10159,6 +10202,7 @@ class PayrollRun extends DataClass implements Insertable<PayrollRun> {
           ..write('idRun: $idRun, ')
           ..write('organizationId: $organizationId, ')
           ..write('periodId: $periodId, ')
+          ..write('workUnitId: $workUnitId, ')
           ..write('statusId: $statusId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -10173,6 +10217,7 @@ class PayrollRun extends DataClass implements Insertable<PayrollRun> {
     idRun,
     organizationId,
     periodId,
+    workUnitId,
     statusId,
     createdAt,
     updatedAt,
@@ -10186,6 +10231,7 @@ class PayrollRun extends DataClass implements Insertable<PayrollRun> {
           other.idRun == this.idRun &&
           other.organizationId == this.organizationId &&
           other.periodId == this.periodId &&
+          other.workUnitId == this.workUnitId &&
           other.statusId == this.statusId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -10197,6 +10243,7 @@ class PayrollRunsCompanion extends UpdateCompanion<PayrollRun> {
   final Value<String> idRun;
   final Value<String> organizationId;
   final Value<String> periodId;
+  final Value<String?> workUnitId;
   final Value<String> statusId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -10207,6 +10254,7 @@ class PayrollRunsCompanion extends UpdateCompanion<PayrollRun> {
     this.idRun = const Value.absent(),
     this.organizationId = const Value.absent(),
     this.periodId = const Value.absent(),
+    this.workUnitId = const Value.absent(),
     this.statusId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -10218,6 +10266,7 @@ class PayrollRunsCompanion extends UpdateCompanion<PayrollRun> {
     this.idRun = const Value.absent(),
     required String organizationId,
     required String periodId,
+    this.workUnitId = const Value.absent(),
     required String statusId,
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -10231,6 +10280,7 @@ class PayrollRunsCompanion extends UpdateCompanion<PayrollRun> {
     Expression<String>? idRun,
     Expression<String>? organizationId,
     Expression<String>? periodId,
+    Expression<String>? workUnitId,
     Expression<String>? statusId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -10242,6 +10292,7 @@ class PayrollRunsCompanion extends UpdateCompanion<PayrollRun> {
       if (idRun != null) 'id_run': idRun,
       if (organizationId != null) 'organization_id': organizationId,
       if (periodId != null) 'period_id': periodId,
+      if (workUnitId != null) 'work_unit_id': workUnitId,
       if (statusId != null) 'status_id': statusId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -10255,6 +10306,7 @@ class PayrollRunsCompanion extends UpdateCompanion<PayrollRun> {
     Value<String>? idRun,
     Value<String>? organizationId,
     Value<String>? periodId,
+    Value<String?>? workUnitId,
     Value<String>? statusId,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -10266,6 +10318,7 @@ class PayrollRunsCompanion extends UpdateCompanion<PayrollRun> {
       idRun: idRun ?? this.idRun,
       organizationId: organizationId ?? this.organizationId,
       periodId: periodId ?? this.periodId,
+      workUnitId: workUnitId ?? this.workUnitId,
       statusId: statusId ?? this.statusId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -10286,6 +10339,9 @@ class PayrollRunsCompanion extends UpdateCompanion<PayrollRun> {
     }
     if (periodId.present) {
       map['period_id'] = Variable<String>(periodId.value);
+    }
+    if (workUnitId.present) {
+      map['work_unit_id'] = Variable<String>(workUnitId.value);
     }
     if (statusId.present) {
       map['status_id'] = Variable<String>(statusId.value);
@@ -10314,6 +10370,7 @@ class PayrollRunsCompanion extends UpdateCompanion<PayrollRun> {
           ..write('idRun: $idRun, ')
           ..write('organizationId: $organizationId, ')
           ..write('periodId: $periodId, ')
+          ..write('workUnitId: $workUnitId, ')
           ..write('statusId: $statusId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -20131,6 +20188,29 @@ final class $$WorkUnitsTableReferences
     );
   }
 
+  static MultiTypedResultKey<$PayrollRunsTable, List<PayrollRun>>
+  _payrollRunsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.payrollRuns,
+    aliasName: $_aliasNameGenerator(
+      db.workUnits.idWorkUnit,
+      db.payrollRuns.workUnitId,
+    ),
+  );
+
+  $$PayrollRunsTableProcessedTableManager get payrollRunsRefs {
+    final manager = $$PayrollRunsTableTableManager($_db, $_db.payrollRuns)
+        .filter(
+          (f) => f.workUnitId.idWorkUnit.sqlEquals(
+            $_itemColumn<String>('id_work_unit')!,
+          ),
+        );
+
+    final cache = $_typedResult.readTableOrNull(_payrollRunsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
   static MultiTypedResultKey<$PayslipLinesTable, List<PayslipLine>>
   _payslipLinesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.payslipLines,
@@ -20371,6 +20451,31 @@ class $$WorkUnitsTableFilterComposer
           }) => $$PieceworkEntriesTableFilterComposer(
             $db: $db,
             $table: $db.pieceworkEntries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> payrollRunsRefs(
+    Expression<bool> Function($$PayrollRunsTableFilterComposer f) f,
+  ) {
+    final $$PayrollRunsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.idWorkUnit,
+      referencedTable: $db.payrollRuns,
+      getReferencedColumn: (t) => t.workUnitId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PayrollRunsTableFilterComposer(
+            $db: $db,
+            $table: $db.payrollRuns,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -20717,6 +20822,31 @@ class $$WorkUnitsTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> payrollRunsRefs<T extends Object>(
+    Expression<T> Function($$PayrollRunsTableAnnotationComposer a) f,
+  ) {
+    final $$PayrollRunsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.idWorkUnit,
+      referencedTable: $db.payrollRuns,
+      getReferencedColumn: (t) => t.workUnitId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PayrollRunsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.payrollRuns,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> payslipLinesRefs<T extends Object>(
     Expression<T> Function($$PayslipLinesTableAnnotationComposer a) f,
   ) {
@@ -20764,6 +20894,7 @@ class $$WorkUnitsTableTableManager
             bool attendanceEventsRefs,
             bool overtimeEntriesRefs,
             bool pieceworkEntriesRefs,
+            bool payrollRunsRefs,
             bool payslipLinesRefs,
           })
         > {
@@ -20851,6 +20982,7 @@ class $$WorkUnitsTableTableManager
                 attendanceEventsRefs = false,
                 overtimeEntriesRefs = false,
                 pieceworkEntriesRefs = false,
+                payrollRunsRefs = false,
                 payslipLinesRefs = false,
               }) {
                 return PrefetchHooks(
@@ -20861,6 +20993,7 @@ class $$WorkUnitsTableTableManager
                     if (attendanceEventsRefs) db.attendanceEvents,
                     if (overtimeEntriesRefs) db.overtimeEntries,
                     if (pieceworkEntriesRefs) db.pieceworkEntries,
+                    if (payrollRunsRefs) db.payrollRuns,
                     if (payslipLinesRefs) db.payslipLines,
                   ],
                   addJoins:
@@ -21015,6 +21148,27 @@ class $$WorkUnitsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (payrollRunsRefs)
+                        await $_getPrefetchedData<
+                          WorkUnit,
+                          $WorkUnitsTable,
+                          PayrollRun
+                        >(
+                          currentTable: table,
+                          referencedTable: $$WorkUnitsTableReferences
+                              ._payrollRunsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$WorkUnitsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).payrollRunsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.workUnitId == item.idWorkUnit,
+                              ),
+                          typedResults: items,
+                        ),
                       if (payslipLinesRefs)
                         await $_getPrefetchedData<
                           WorkUnit,
@@ -21064,6 +21218,7 @@ typedef $$WorkUnitsTableProcessedTableManager =
         bool attendanceEventsRefs,
         bool overtimeEntriesRefs,
         bool pieceworkEntriesRefs,
+        bool payrollRunsRefs,
         bool payslipLinesRefs,
       })
     >;
@@ -27429,6 +27584,7 @@ typedef $$PayrollRunsTableCreateCompanionBuilder =
       Value<String> idRun,
       required String organizationId,
       required String periodId,
+      Value<String?> workUnitId,
       required String statusId,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -27441,6 +27597,7 @@ typedef $$PayrollRunsTableUpdateCompanionBuilder =
       Value<String> idRun,
       Value<String> organizationId,
       Value<String> periodId,
+      Value<String?> workUnitId,
       Value<String> statusId,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -27491,6 +27648,28 @@ final class $$PayrollRunsTableReferences
       $_db.payrollPeriods,
     ).filter((f) => f.idPeriod.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_periodIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $WorkUnitsTable _workUnitIdTable(_$AppDatabase db) =>
+      db.workUnits.createAlias(
+        $_aliasNameGenerator(
+          db.payrollRuns.workUnitId,
+          db.workUnits.idWorkUnit,
+        ),
+      );
+
+  $$WorkUnitsTableProcessedTableManager? get workUnitId {
+    final $_column = $_itemColumn<String>('work_unit_id');
+    if ($_column == null) return null;
+    final manager = $$WorkUnitsTableTableManager(
+      $_db,
+      $_db.workUnits,
+    ).filter((f) => f.idWorkUnit.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_workUnitIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -27607,6 +27786,29 @@ class $$PayrollRunsTableFilterComposer
           }) => $$PayrollPeriodsTableFilterComposer(
             $db: $db,
             $table: $db.payrollPeriods,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$WorkUnitsTableFilterComposer get workUnitId {
+    final $$WorkUnitsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.workUnitId,
+      referencedTable: $db.workUnits,
+      getReferencedColumn: (t) => t.idWorkUnit,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WorkUnitsTableFilterComposer(
+            $db: $db,
+            $table: $db.workUnits,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -27745,6 +27947,29 @@ class $$PayrollRunsTableOrderingComposer
     return composer;
   }
 
+  $$WorkUnitsTableOrderingComposer get workUnitId {
+    final $$WorkUnitsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.workUnitId,
+      referencedTable: $db.workUnits,
+      getReferencedColumn: (t) => t.idWorkUnit,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WorkUnitsTableOrderingComposer(
+            $db: $db,
+            $table: $db.workUnits,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
   $$StatusesTableOrderingComposer get statusId {
     final $$StatusesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -27841,6 +28066,29 @@ class $$PayrollRunsTableAnnotationComposer
     return composer;
   }
 
+  $$WorkUnitsTableAnnotationComposer get workUnitId {
+    final $$WorkUnitsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.workUnitId,
+      referencedTable: $db.workUnits,
+      getReferencedColumn: (t) => t.idWorkUnit,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WorkUnitsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.workUnits,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
   $$StatusesTableAnnotationComposer get statusId {
     final $$StatusesTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -27906,6 +28154,7 @@ class $$PayrollRunsTableTableManager
           PrefetchHooks Function({
             bool organizationId,
             bool periodId,
+            bool workUnitId,
             bool statusId,
             bool payslipsRefs,
           })
@@ -27926,6 +28175,7 @@ class $$PayrollRunsTableTableManager
                 Value<String> idRun = const Value.absent(),
                 Value<String> organizationId = const Value.absent(),
                 Value<String> periodId = const Value.absent(),
+                Value<String?> workUnitId = const Value.absent(),
                 Value<String> statusId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -27936,6 +28186,7 @@ class $$PayrollRunsTableTableManager
                 idRun: idRun,
                 organizationId: organizationId,
                 periodId: periodId,
+                workUnitId: workUnitId,
                 statusId: statusId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -27948,6 +28199,7 @@ class $$PayrollRunsTableTableManager
                 Value<String> idRun = const Value.absent(),
                 required String organizationId,
                 required String periodId,
+                Value<String?> workUnitId = const Value.absent(),
                 required String statusId,
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -27958,6 +28210,7 @@ class $$PayrollRunsTableTableManager
                 idRun: idRun,
                 organizationId: organizationId,
                 periodId: periodId,
+                workUnitId: workUnitId,
                 statusId: statusId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -27977,6 +28230,7 @@ class $$PayrollRunsTableTableManager
               ({
                 organizationId = false,
                 periodId = false,
+                workUnitId = false,
                 statusId = false,
                 payslipsRefs = false,
               }) {
@@ -28026,6 +28280,21 @@ class $$PayrollRunsTableTableManager
                                         $$PayrollRunsTableReferences
                                             ._periodIdTable(db)
                                             .idPeriod,
+                                  )
+                                  as T;
+                        }
+                        if (workUnitId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.workUnitId,
+                                    referencedTable:
+                                        $$PayrollRunsTableReferences
+                                            ._workUnitIdTable(db),
+                                    referencedColumn:
+                                        $$PayrollRunsTableReferences
+                                            ._workUnitIdTable(db)
+                                            .idWorkUnit,
                                   )
                                   as T;
                         }
@@ -28093,6 +28362,7 @@ typedef $$PayrollRunsTableProcessedTableManager =
       PrefetchHooks Function({
         bool organizationId,
         bool periodId,
+        bool workUnitId,
         bool statusId,
         bool payslipsRefs,
       })

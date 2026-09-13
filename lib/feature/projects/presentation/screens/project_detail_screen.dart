@@ -85,6 +85,36 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     await context.push('/projects/${widget.projectId}/activities');
   }
 
+  Future<void> _handlePayPayroll() async {
+    final frequency = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.payments_rounded),
+              title: const Text('Pagar nómina semanal'),
+              onTap: () => Navigator.of(context).pop('weekly'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.calendar_month_rounded),
+              title: const Text('Pagar nómina quincenal'),
+              onTap: () => Navigator.of(context).pop('biweekly'),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || frequency == null) return;
+
+    await context.push<bool>(
+      '/projects/${widget.projectId}/payroll/$frequency',
+    );
+  }
+
   Future<void> _handleRemoveAssignedEmployee(
     ProjectAssignedEmployee employee,
   ) async {
@@ -193,6 +223,19 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                     children: [
                       _ProjectProgressCard(detail: detail),
                       const SizedBox(height: 18),
+                      FilledButton.icon(
+                        onPressed: employees.isEmpty ? null : _handlePayPayroll,
+                        icon: const Icon(Icons.payments_rounded),
+                        label: const Text('Pagar nómina de esta obra'),
+                      ),
+                      if (employees.isEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          'Asigna empleados a la obra antes de registrar un pago.',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                      const SizedBox(height: 12),
                       Row(
                         children: [
                           Expanded(

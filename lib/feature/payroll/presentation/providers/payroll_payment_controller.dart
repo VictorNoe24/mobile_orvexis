@@ -22,7 +22,7 @@ class PayrollPaymentController extends ChangeNotifier {
   PayrollPaymentPreview? preview;
   bool _isDisposed = false;
 
-  Future<void> initialize(String payFrequency) async {
+  Future<void> initialize(String payFrequency, {String? projectId}) async {
     if (_isDisposed) {
       return;
     }
@@ -44,6 +44,7 @@ class PayrollPaymentController extends ChangeNotifier {
       preview = await _getPayrollPaymentPreviewUseCase(
         organizationId: session.organizationId,
         payFrequency: payFrequency,
+        projectId: projectId,
       );
     } catch (error) {
       if (_isDisposed) {
@@ -58,16 +59,18 @@ class PayrollPaymentController extends ChangeNotifier {
     }
   }
 
-  Future<void> submit(String payFrequency) async {
+  Future<void> submit(String payFrequency, {String? projectId}) async {
     await submitWithAdjustments(
       payFrequency: payFrequency,
       adjustments: const [],
+      projectId: projectId,
     );
   }
 
   Future<void> submitWithAdjustments({
     required String payFrequency,
     required List<PayrollPaymentAdjustmentInput> adjustments,
+    String? projectId,
   }) async {
     if (_isDisposed) {
       return;
@@ -90,6 +93,7 @@ class PayrollPaymentController extends ChangeNotifier {
         organizationId: session.organizationId,
         payFrequency: payFrequency,
         adjustments: adjustments,
+        projectId: projectId,
       );
     } finally {
       if (!_isDisposed) {

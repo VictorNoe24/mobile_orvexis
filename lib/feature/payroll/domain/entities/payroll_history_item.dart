@@ -2,6 +2,7 @@ class PayrollHistoryItem {
   const PayrollHistoryItem({
     required this.runId,
     required this.policyName,
+    this.projectName,
     required this.payFrequency,
     required this.statusLabel,
     required this.periodLabel,
@@ -12,6 +13,7 @@ class PayrollHistoryItem {
 
   final String runId;
   final String policyName;
+  final String? projectName;
   final String payFrequency;
   final String statusLabel;
   final String periodLabel;

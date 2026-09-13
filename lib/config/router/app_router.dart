@@ -253,8 +253,9 @@ GoRouter appRouter({
         ),
       ),
       GoRoute(
-        path: '/payroll/pay/:frequency',
+        path: '/projects/:projectId/payroll/:frequency',
         builder: (context, state) => PayrollPaymentScreen(
+          projectId: state.pathParameters['projectId']!,
           payFrequency: state.pathParameters['frequency']!,
           controller: PayrollPaymentController(
             getCurrentSessionUseCase,

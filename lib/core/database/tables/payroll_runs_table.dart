@@ -4,12 +4,15 @@ import '../../helpers/uuid_helper.dart';
 import 'organizations_table.dart';
 import 'payroll_periods_table.dart';
 import 'statuses_table.dart';
+import 'work_units_table.dart';
 
 class PayrollRuns extends Table {
   TextColumn get idRun => text().clientDefault(() => UuidHelper.generate())();
   TextColumn get organizationId =>
       text().references(Organizations, #idOrganization)();
   TextColumn get periodId => text().references(PayrollPeriods, #idPeriod)();
+  TextColumn get workUnitId =>
+      text().nullable().references(WorkUnits, #idWorkUnit)();
   TextColumn get statusId => text().references(Statuses, #idStatus)();
   DateTimeColumn get createdAt =>
       dateTime().clientDefault(() => DateHelper.now())();

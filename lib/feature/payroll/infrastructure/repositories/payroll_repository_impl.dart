@@ -20,10 +20,12 @@ class PayrollRepositoryImpl implements PayrollRepository {
   Future<PayrollPaymentPreview> getPaymentPreview({
     required String organizationId,
     required String payFrequency,
+    String? projectId,
   }) {
     return _localDataSource.getPaymentPreview(
       organizationId: organizationId,
       payFrequency: payFrequency,
+      projectId: projectId,
     );
   }
 
@@ -32,11 +34,13 @@ class PayrollRepositoryImpl implements PayrollRepository {
     required String organizationId,
     required String payFrequency,
     required List<PayrollPaymentAdjustmentInput> adjustments,
+    String? projectId,
   }) {
     return _localDataSource.processPayment(
       organizationId: organizationId,
       payFrequency: payFrequency,
       adjustments: adjustments,
+      projectId: projectId,
     );
   }
 

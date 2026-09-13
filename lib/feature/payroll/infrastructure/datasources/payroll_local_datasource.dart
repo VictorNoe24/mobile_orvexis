@@ -232,13 +232,21 @@ class PayrollLocalDataSource {
   Future<PayrollPaymentPreview> getPaymentPreview({
     required String organizationId,
     required String payFrequency,
+    String? projectId,
   }) async {
     final normalizedFrequency = _normalizePayFrequency(payFrequency);
     final period = _resolveCurrentPeriod(normalizedFrequency);
     final contracts = await _getContractsForFrequency(
       organizationId: organizationId,
       payFrequency: normalizedFrequency,
+      projectId: projectId,
     );
+    final projectName = projectId == null
+        ? null
+        : await _getProjectName(
+            organizationId: organizationId,
+            projectId: projectId,
+          );
 
     final totalAmount = contracts.fold<double>(
       0,
@@ -252,6 +260,7 @@ class PayrollLocalDataSource {
       periodEnd: period.end,
       periodLabel: _buildPeriodLabel(period.start, period.end),
       payDateLabel: _formatDate(period.end),
+      projectName: projectName,
       employeesCount: contracts.length,
       totalAmount: totalAmount,
       items: contracts,
@@ -262,11 +271,13 @@ class PayrollLocalDataSource {
     required String organizationId,
     required String payFrequency,
     required List<PayrollPaymentAdjustmentInput> adjustments,
+    String? projectId,
   }) async {
     final normalizedFrequency = _normalizePayFrequency(payFrequency);
     final preview = await getPaymentPreview(
       organizationId: organizationId,
       payFrequency: normalizedFrequency,
+      projectId: projectId,
     );
 
     if (preview.items.isEmpty) {
@@ -310,16 +321,36 @@ class PayrollLocalDataSource {
     }
 
     await _database.transaction(() async {
+      if (projectId != null) {
+        for (final item in preview.items) {
+          final alreadyPaid = await _hasEmployeePaidForPeriod(
+            organizationId: organizationId,
+            orgUserId: item.orgUserId,
+            payFrequency: normalizedFrequency,
+            periodStart: preview.periodStart,
+            periodEnd: preview.periodEnd,
+            paidRunStatusId: paidRunStatusId,
+          );
+          if (alreadyPaid) {
+            throw Exception(
+              '${item.employeeName} ya tiene un sueldo pagado para ${preview.periodLabel}.',
+            );
+          }
+        }
+      }
+
       for (final entry in itemsByPolicy.entries) {
         final policyId = entry.key;
         final items = entry.value;
-        final alreadyPaid = await _hasPaidRunForPeriod(
-          organizationId: organizationId,
-          policyId: policyId,
-          periodStart: preview.periodStart,
-          periodEnd: preview.periodEnd,
-          paidRunStatusId: paidRunStatusId,
-        );
+        final alreadyPaid = projectId == null
+            ? await _hasPaidRunForPeriod(
+                organizationId: organizationId,
+                policyId: policyId,
+                periodStart: preview.periodStart,
+                periodEnd: preview.periodEnd,
+                paidRunStatusId: paidRunStatusId,
+              )
+            : false;
 
         if (alreadyPaid) {
           throw Exception(
@@ -352,6 +383,9 @@ class PayrollLocalDataSource {
                 idRun: Value(runId),
                 organizationId: Value(organizationId),
                 periodId: Value(periodId),
+                workUnitId: projectId == null
+                    ? const Value.absent()
+                    : Value(projectId),
                 statusId: Value(paidRunStatusId),
                 approvedAt: Value(now),
                 paidAt: Value(now),
@@ -398,6 +432,7 @@ class PayrollLocalDataSource {
       SELECT
         pr.id_run AS run_id,
         pp.name AS policy_name,
+        wu.name AS project_name,
         pp.pay_frequency AS pay_frequency,
         s.name AS status_name,
         CAST(pe.period_start AS TEXT) AS period_start,
@@ -409,11 +444,13 @@ class PayrollLocalDataSource {
       INNER JOIN payroll_periods pe ON pe.id_period = pr.period_id
       INNER JOIN payroll_policies pp ON pp.id_policy = pe.policy_id
       INNER JOIN statuses s ON s.id_status = pr.status_id
+      LEFT JOIN work_units wu ON wu.id_work_unit = pr.work_unit_id
       LEFT JOIN payslips ps ON ps.run_id = pr.id_run
       WHERE pr.organization_id = ?
       GROUP BY
         pr.id_run,
         pp.name,
+        wu.name,
         pp.pay_frequency,
         s.name,
         pe.period_start,
@@ -431,6 +468,7 @@ class PayrollLocalDataSource {
             _database.payrollPolicies,
             _database.statuses,
             _database.payslips,
+            _database.workUnits,
           },
         )
         .get();
@@ -440,6 +478,7 @@ class PayrollLocalDataSource {
           (row) => PayrollHistoryItem(
             runId: row.read<String>('run_id'),
             policyName: row.read<String>('policy_name'),
+            projectName: row.read<String?>('project_name'),
             payFrequency: row.read<String>('pay_frequency'),
             statusLabel: row.read<String>('status_name'),
             periodLabel: _buildPeriodLabel(
@@ -594,7 +633,19 @@ class PayrollLocalDataSource {
   Future<List<PayrollPaymentPreviewItem>> _getContractsForFrequency({
     required String organizationId,
     required String payFrequency,
+    String? projectId,
   }) async {
+    final projectFilter = projectId == null
+        ? ''
+        : '''
+      INNER JOIN work_unit_assignments wua
+        ON wua.org_user_id = ec.org_user_id
+       AND wua.organization_id = ec.organization_id
+       AND wua.global_status_id = ?
+      ''';
+    final projectCondition = projectId == null
+        ? ''
+        : 'AND wua.work_unit_id = ?';
     final rows = await _database
         .customSelect(
           '''
@@ -612,17 +663,22 @@ class PayrollLocalDataSource {
       INNER JOIN payroll_policies pp ON pp.id_policy = ec.policy_id
       INNER JOIN org_users ou ON ou.id_org_user = ec.org_user_id
       INNER JOIN users u ON u.id_user = ou.user_id
+      $projectFilter
       WHERE ec.organization_id = ?
         AND ec.global_status_id = ?
         AND u.global_status_id = ?
         AND pp.pay_frequency = ?
+        $projectCondition
       ORDER BY ec.updated_at DESC, ec.created_at DESC
       ''',
           variables: [
+            if (projectId != null)
+              Variable.withString(GlobalStatusDefaults.activeId),
             Variable.withString(organizationId),
             Variable.withString(GlobalStatusDefaults.activeId),
             Variable.withString(GlobalStatusDefaults.activeId),
             Variable.withString(payFrequency),
+            if (projectId != null) Variable.withString(projectId),
           ],
           readsFrom: {
             _database.employeeContracts,
@@ -664,6 +720,67 @@ class PayrollLocalDataSource {
     }
 
     return items;
+  }
+
+  Future<String> _getProjectName({
+    required String organizationId,
+    required String projectId,
+  }) async {
+    final project =
+        await (_database.select(_database.workUnits)..where(
+              (tbl) =>
+                  tbl.organizationId.equals(organizationId) &
+                  tbl.idWorkUnit.equals(projectId),
+            ))
+            .getSingleOrNull();
+
+    if (project == null) {
+      throw Exception('No se encontro la obra seleccionada.');
+    }
+    return project.name;
+  }
+
+  Future<bool> _hasEmployeePaidForPeriod({
+    required String organizationId,
+    required String orgUserId,
+    required String payFrequency,
+    required DateTime periodStart,
+    required DateTime periodEnd,
+    required String paidRunStatusId,
+  }) async {
+    final rows = await _database
+        .customSelect(
+          '''
+      SELECT ps.id_payslip AS payslip_id
+      FROM payslips ps
+      INNER JOIN payroll_runs pr ON pr.id_run = ps.run_id
+      INNER JOIN payroll_periods pe ON pe.id_period = pr.period_id
+      INNER JOIN payroll_policies pp ON pp.id_policy = pe.policy_id
+      WHERE ps.organization_id = ?
+        AND ps.org_user_id = ?
+        AND pp.pay_frequency = ?
+        AND pe.period_start = ?
+        AND pe.period_end = ?
+        AND pr.status_id = ?
+      LIMIT 1
+      ''',
+          variables: [
+            Variable.withString(organizationId),
+            Variable.withString(orgUserId),
+            Variable.withString(payFrequency),
+            Variable.withDateTime(periodStart),
+            Variable.withDateTime(periodEnd),
+            Variable.withString(paidRunStatusId),
+          ],
+          readsFrom: {
+            _database.payslips,
+            _database.payrollRuns,
+            _database.payrollPeriods,
+            _database.payrollPolicies,
+          },
+        )
+        .get();
+    return rows.isNotEmpty;
   }
 
   ({DateTime start, DateTime end}) _resolveCurrentPeriod(String payFrequency) {

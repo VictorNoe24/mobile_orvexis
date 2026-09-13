@@ -10,10 +10,12 @@ class PayrollPaymentScreen extends StatefulWidget {
     super.key,
     required this.payFrequency,
     required this.controller,
+    this.projectId,
   });
 
   final String payFrequency;
   final PayrollPaymentController controller;
+  final String? projectId;
 
   @override
   State<PayrollPaymentScreen> createState() => _PayrollPaymentScreenState();
@@ -27,16 +29,23 @@ class _PayrollPaymentScreenState extends State<PayrollPaymentScreen> {
   @override
   void initState() {
     super.initState();
-    widget.controller.initialize(widget.payFrequency);
+    widget.controller.initialize(
+      widget.payFrequency,
+      projectId: widget.projectId,
+    );
   }
 
   @override
   void didUpdateWidget(covariant PayrollPaymentScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller != widget.controller ||
-        oldWidget.payFrequency != widget.payFrequency) {
+        oldWidget.payFrequency != widget.payFrequency ||
+        oldWidget.projectId != widget.projectId) {
       _disposeAmountControllers();
-      widget.controller.initialize(widget.payFrequency);
+      widget.controller.initialize(
+        widget.payFrequency,
+        projectId: widget.projectId,
+      );
     }
   }
 
@@ -59,6 +68,7 @@ class _PayrollPaymentScreenState extends State<PayrollPaymentScreen> {
       await widget.controller.submitWithAdjustments(
         payFrequency: widget.payFrequency,
         adjustments: adjustments,
+        projectId: widget.projectId,
       );
       if (!mounted) return;
 
@@ -272,7 +282,9 @@ class _PaymentHero extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Se generaran recibos y corrida pagada para este periodo.',
+            preview.projectName == null
+                ? 'Se generaran recibos y corrida pagada para este periodo.'
+                : 'Pago de sueldo para la obra ${preview.projectName}.',
             style: theme.textTheme.bodyLarge?.copyWith(
               color: Colors.white.withValues(alpha: 0.92),
             ),
