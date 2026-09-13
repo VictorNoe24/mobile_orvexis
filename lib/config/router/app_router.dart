@@ -45,8 +45,10 @@ import 'package:mobile_orvexis/feature/payroll/infrastructure/repositories/payro
 import 'package:mobile_orvexis/feature/payroll/infrastructure/services/payroll_pdf_service.dart';
 import 'package:mobile_orvexis/feature/payroll/presentation/providers/payroll_history_controller.dart';
 import 'package:mobile_orvexis/feature/payroll/presentation/providers/payroll_payment_controller.dart';
+import 'package:mobile_orvexis/feature/payroll/presentation/providers/payroll_run_detail_controller.dart';
 import 'package:mobile_orvexis/feature/payroll/presentation/screens/payroll_history_screen.dart';
 import 'package:mobile_orvexis/feature/payroll/presentation/screens/payroll_payment_screen.dart';
+import 'package:mobile_orvexis/feature/payroll/presentation/screens/payroll_run_detail_screen.dart';
 import 'package:mobile_orvexis/feature/projects/infrastructure/datasources/projects_local_datasource.dart';
 import 'package:mobile_orvexis/feature/projects/infrastructure/repositories/projects_repository_impl.dart';
 import 'package:mobile_orvexis/feature/projects/presentation/providers/assign_project_employees_controller.dart';
@@ -284,6 +286,16 @@ GoRouter appRouter({
             getPayrollHistoryUseCase,
             getPayrollReportUseCase,
             payrollPdfService,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/payroll/history/:runId',
+        builder: (context, state) => PayrollRunDetailScreen(
+          runId: state.pathParameters['runId']!,
+          controller: PayrollRunDetailController(
+            getCurrentSessionUseCase,
+            getPayrollReportUseCase,
           ),
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile_orvexis/feature/payroll/domain/entities/payroll_history_item.dart';
 import 'package:mobile_orvexis/feature/payroll/presentation/providers/payroll_history_controller.dart';
 
@@ -61,6 +62,10 @@ class _PayrollHistoryScreenState extends State<PayrollHistoryScreen> {
         ),
       );
     }
+  }
+
+  Future<void> _handleViewDetails(PayrollHistoryItem item) async {
+    await context.push('/payroll/history/${item.runId}');
   }
 
   @override
@@ -131,6 +136,7 @@ class _PayrollHistoryScreenState extends State<PayrollHistoryScreen> {
                             ),
                             onSavePdf: () => _handleSavePdf(item),
                             onSharePdf: () => _handleSharePdf(item),
+                            onViewDetails: () => _handleViewDetails(item),
                           ),
                         ),
                       ),
@@ -149,148 +155,157 @@ class _PayrollHistoryCard extends StatelessWidget {
     required this.isExporting,
     required this.onSavePdf,
     required this.onSharePdf,
+    required this.onViewDetails,
   });
 
   final PayrollHistoryItem item;
   final bool isExporting;
   final VoidCallback onSavePdf;
   final VoidCallback onSharePdf;
+  final VoidCallback onViewDetails;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = Theme.of(context).colorScheme;
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: colors.surface,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onViewDetails,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colors.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: colors.outlineVariant),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  item.policyName,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE7F7ED),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  item.statusLabel,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: const Color(0xFF149954),
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              PopupMenuButton<_PdfAction>(
-                enabled: !isExporting,
-                tooltip: 'Opciones del PDF',
-                onSelected: (action) {
-                  switch (action) {
-                    case _PdfAction.save:
-                      onSavePdf();
-                    case _PdfAction.share:
-                      onSharePdf();
-                  }
-                },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(
-                    value: _PdfAction.save,
-                    child: ListTile(
-                      leading: Icon(Icons.save_alt_rounded),
-                      title: Text('Guardar PDF'),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      item.policyName,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
-                  PopupMenuItem(
-                    value: _PdfAction.share,
-                    child: ListTile(
-                      leading: Icon(Icons.share_rounded),
-                      title: Text('Compartir PDF'),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE7F7ED),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      item.statusLabel,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: const Color(0xFF149954),
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  PopupMenuButton<_PdfAction>(
+                    enabled: !isExporting,
+                    tooltip: 'Opciones del PDF',
+                    onSelected: (action) {
+                      switch (action) {
+                        case _PdfAction.save:
+                          onSavePdf();
+                        case _PdfAction.share:
+                          onSharePdf();
+                      }
+                    },
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(
+                        value: _PdfAction.save,
+                        child: ListTile(
+                          leading: Icon(Icons.save_alt_rounded),
+                          title: Text('Guardar PDF'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _PdfAction.share,
+                        child: ListTile(
+                          leading: Icon(Icons.share_rounded),
+                          title: Text('Compartir PDF'),
+                        ),
+                      ),
+                    ],
+                    child: FilledButton.tonalIcon(
+                      onPressed: null,
+                      icon: isExporting
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.picture_as_pdf_rounded),
+                      label: Text(isExporting ? 'Generando...' : 'PDF'),
                     ),
                   ),
                 ],
-                child: FilledButton.tonalIcon(
-                  onPressed: null,
-                  icon: isExporting
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.picture_as_pdf_rounded),
-                  label: Text(isExporting ? 'Generando...' : 'PDF'),
+              ),
+              const SizedBox(height: 8),
+              if (item.projectName != null) ...[
+                Text(
+                  'Obra: ${item.projectName}',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
+                const SizedBox(height: 4),
+              ],
+              Text(
+                item.payFrequency == 'biweekly'
+                    ? 'Nomina quincenal'
+                    : 'Nomina semanal',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: colors.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                item.periodLabel,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                item.eventLabel,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _HistoryMetric(
+                      label: 'Recibos',
+                      value: '${item.employeesCount}',
+                    ),
+                  ),
+                  Expanded(
+                    child: _HistoryMetric(
+                      label: 'Monto pagado',
+                      value: _currency(item.totalNetAmount),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          if (item.projectName != null) ...[
-            Text(
-              'Obra: ${item.projectName}',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 4),
-          ],
-          Text(
-            item.payFrequency == 'biweekly'
-                ? 'Nomina quincenal'
-                : 'Nomina semanal',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: colors.primary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            item.periodLabel,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: colors.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            item.eventLabel,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colors.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _HistoryMetric(
-                  label: 'Recibos',
-                  value: '${item.employeesCount}',
-                ),
-              ),
-              Expanded(
-                child: _HistoryMetric(
-                  label: 'Monto pagado',
-                  value: _currency(item.totalNetAmount),
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
